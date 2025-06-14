@@ -7,6 +7,10 @@ const rateLimit = require('express-rate-limit');
 const authRoutes = require('./routes/auth');
 const itemRoutes = require('./routes/items');
 const userRoutes = require('./routes/users');
+const storeRoutes = require('./routes/stores');
+const therapistRoutes = require('./routes/therapists');
+const appointmentRoutes = require('./routes/appointments');
+const appointmentFunctions = require('./routes/appointment-functions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,11 +23,16 @@ const limiter = rateLimit({
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.set('trust proxy', true);
 app.use(limiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
+app.use('/api/therapists', therapistRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/functions', appointmentFunctions);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
