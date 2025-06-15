@@ -48,7 +48,9 @@ function AppointmentsContent() {
     try {
       setLoading(true)
       const response = await appointmentApi.list()
-      setAppointments(response.data)
+      // Handle SQLite API response format
+      const appointments = response.data?.appointments || response.data || []
+      setAppointments(appointments)
     } catch (error) {
       console.error('Failed to fetch appointments:', error)
     } finally {
@@ -64,10 +66,11 @@ function AppointmentsContent() {
         storeApi.list(),
         specialtyApi.list(),
       ])
-      setUsers(usersRes.data)
-      setTherapists(therapistsRes.data)
-      setStores(storesRes.data)
-      setSpecialties(specialtiesRes.data)
+      // Handle SQLite API response format
+      setUsers(usersRes.data?.users || usersRes.data || [])
+      setTherapists(therapistsRes.data?.therapists || therapistsRes.data || [])
+      setStores(storesRes.data?.stores || storesRes.data || [])
+      setSpecialties(specialtiesRes.data?.specialties || specialtiesRes.data || [])
     } catch (error) {
       console.error('Failed to fetch dropdown data:', error)
     }

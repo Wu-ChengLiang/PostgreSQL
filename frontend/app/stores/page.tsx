@@ -42,7 +42,9 @@ export default function StoresPage() {
     try {
       setLoading(true)
       const response = await storeApi.list()
-      setStores(response.data)
+      // Handle SQLite API response format
+      const stores = response.data?.stores || response.data || []
+      setStores(stores)
     } catch (error) {
       console.error('Failed to fetch stores:', error)
     } finally {

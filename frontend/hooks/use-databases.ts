@@ -6,7 +6,8 @@ export function useDatabases() {
     queryKey: ['databases'],
     queryFn: async () => {
       const response = await databaseApi.list()
-      return response.data
+      // Handle SQLite API response format
+      return response.data?.databases || response.data || []
     },
   })
 }
@@ -16,7 +17,8 @@ export function useDatabase(name: string) {
     queryKey: ['database', name],
     queryFn: async () => {
       const response = await databaseApi.get(name)
-      return response.data
+      // Handle SQLite API response format
+      return response.data?.database || response.data
     },
     enabled: !!name,
   })
@@ -27,7 +29,8 @@ export function useDatabaseStats(name: string) {
     queryKey: ['database-stats', name],
     queryFn: async () => {
       const response = await databaseApi.getStats(name)
-      return response.data
+      // Handle SQLite API response format
+      return response.data?.stats || response.data
     },
     enabled: !!name,
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -40,7 +43,8 @@ export function useCreateDatabase() {
   return useMutation({
     mutationFn: async (data: { name: string }) => {
       const response = await databaseApi.create(data)
-      return response.data
+      // Handle SQLite API response format
+      return response.data?.database || response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['databases'] })
@@ -54,7 +58,8 @@ export function useDeleteDatabase() {
   return useMutation({
     mutationFn: async (name: string) => {
       const response = await databaseApi.delete(name)
-      return response.data
+      // Handle SQLite API response format  
+      return response.data || response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['databases'] })

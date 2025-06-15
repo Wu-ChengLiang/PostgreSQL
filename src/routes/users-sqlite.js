@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const database = require('../config/database-sqlite');
 
 // JWT密钥
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -14,6 +15,72 @@ const generateToken = (user) => {
     { expiresIn: '7d' }
   );
 };
+
+// 获取所有用户
+router.get('/', async (req, res) => {
+  try {
+    const users = await database.all(`
+      SELECT id, username, email, phone, created_at
+      FROM users
+      ORDER BY created_at DESC
+    `);
+    
+    res.json({
+      success: true,
+      users: users
+    });
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取用户列表失败'
+    });
+  }
+});
+
+// 获取单个用户
+router.get('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    const user = await database.get(`
+      SELECT id, username, email, phone, created_at
+      FROM users
+      WHERE id = ?
+    `, [id]);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      });
+    }
+    
+    // 获取用户的预约统计
+    const stats = await database.get(`
+      SELECT 
+        COUNT(*) as total_appointments,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_appointments,
+        COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_appointments,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_appointments
+      FROM appointments
+      WHERE user_id = ?
+    `, [id]);
+    
+    user.appointment_stats = stats;
+    
+    res.json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    console.error('获取用户详情失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取用户详情失败'
+    });
+  }
+});
 
 // 用户注册
 router.post('/register', async (req, res) => {
@@ -28,13 +95,45 @@ router.post('/register', async (req, res) => {
       });
     }
     
+    // 检查用户名是否已存在
+    const existingUser = await database.get(
+      'SELECT id FROM users WHERE username = ?',
+      [username]
+    );
+    
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: '用户名已存在'
+      });
+    }
+    
+    // 检查邮箱是否已存在
+    const existingEmail = await database.get(
+      'SELECT id FROM users WHERE email = ?',
+      [email]
+    );
+    
+    if (existingEmail) {
+      return res.status(409).json({
+        success: false,
+        error: '邮箱已被注册'
+      });
+    }
+    
+    // 加密密码
+    const password_hash = await bcrypt.hash(password, 10);
+    
     // 创建用户
-    const user = await User.createUser({
-      username,
-      email,
-      phone,
-      password
-    });
+    const result = await database.run(`
+      INSERT INTO users (username, email, phone, password_hash, created_at)
+      VALUES (?, ?, ?, ?, datetime('now'))
+    `, [username, email, phone || null, password_hash]);
+    
+    const user = await database.get(
+      'SELECT id, username, email, phone, created_at FROM users WHERE id = ?',
+      [result.lastID]
+    );
     
     // 生成令牌
     const token = generateToken(user);
@@ -46,21 +145,6 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('用户注册失败:', error);
-    
-    if (error.message === '用户名已存在') {
-      return res.status(409).json({
-        success: false,
-        error: '用户名已存在'
-      });
-    }
-    
-    if (error.message === '邮箱已被注册') {
-      return res.status(409).json({
-        success: false,
-        error: '邮箱已被注册'
-      });
-    }
-    
     res.status(500).json({
       success: false,
       error: '用户注册失败'
@@ -80,8 +164,11 @@ router.post('/login', async (req, res) => {
       });
     }
     
-    // 验证用户
-    const user = await User.verifyPassword(username, password);
+    // 查找用户
+    const user = await database.get(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
     
     if (!user) {
       return res.status(401).json({
@@ -90,8 +177,21 @@ router.post('/login', async (req, res) => {
       });
     }
     
+    // 验证密码
+    const isValid = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: '用户名或密码错误'
+      });
+    }
+    
     // 生成令牌
     const token = generateToken(user);
+    
+    // 移除密码哈希
+    delete user.password_hash;
     
     res.json({
       success: true,
@@ -107,70 +207,70 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 获取用户信息
-router.get('/:id', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const user = await User.getUserInfo(id);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: '用户不存在'
-      });
-    }
-    
-    res.json({
-      success: true,
-      user: user
-    });
-  } catch (error) {
-    console.error('获取用户信息失败:', error);
-    res.status(500).json({
-      success: false,
-      error: '获取用户信息失败'
-    });
-  }
-});
-
-// 获取用户统计信息
-router.get('/:id/stats', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const stats = await User.getUserStats(id);
-    
-    if (!stats) {
-      return res.status(404).json({
-        success: false,
-        error: '用户不存在'
-      });
-    }
-    
-    res.json({
-      success: true,
-      stats: stats
-    });
-  } catch (error) {
-    console.error('获取用户统计失败:', error);
-    res.status(500).json({
-      success: false,
-      error: '获取用户统计失败'
-    });
-  }
-});
-
 // 更新用户信息
 router.put('/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { email, phone } = req.body;
     
-    const updateData = {};
-    if (email) updateData.email = email;
-    if (phone) updateData.phone = phone;
+    // 检查用户是否存在
+    const existingUser = await database.get(
+      'SELECT * FROM users WHERE id = ?',
+      [id]
+    );
     
-    const user = await User.update(id, updateData);
-    delete user.password_hash;
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      });
+    }
+    
+    // 构建更新语句
+    const updates = [];
+    const values = [];
+    
+    if (email !== undefined) {
+      // 检查邮箱是否被其他用户使用
+      const emailUser = await database.get(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, id]
+      );
+      
+      if (emailUser) {
+        return res.status(409).json({
+          success: false,
+          error: '邮箱已被其他用户使用'
+        });
+      }
+      
+      updates.push('email = ?');
+      values.push(email);
+    }
+    
+    if (phone !== undefined) {
+      updates.push('phone = ?');
+      values.push(phone);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: '没有提供要更新的字段'
+      });
+    }
+    
+    values.push(id);
+    
+    await database.run(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+    
+    const user = await database.get(
+      'SELECT id, username, email, phone, created_at FROM users WHERE id = ?',
+      [id]
+    );
     
     res.json({
       success: true,
@@ -199,7 +299,11 @@ router.put('/:id/password', async (req, res) => {
     }
     
     // 获取用户信息
-    const user = await User.findById(id);
+    const user = await database.get(
+      'SELECT * FROM users WHERE id = ?',
+      [id]
+    );
+    
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -208,16 +312,23 @@ router.put('/:id/password', async (req, res) => {
     }
     
     // 验证旧密码
-    const validUser = await User.verifyPassword(user.username, old_password);
-    if (!validUser) {
+    const isValid = await bcrypt.compare(old_password, user.password_hash);
+    
+    if (!isValid) {
       return res.status(401).json({
         success: false,
         error: '旧密码错误'
       });
     }
     
+    // 加密新密码
+    const new_password_hash = await bcrypt.hash(new_password, 10);
+    
     // 更新密码
-    await User.updatePassword(id, new_password);
+    await database.run(
+      'UPDATE users SET password_hash = ? WHERE id = ?',
+      [new_password_hash, id]
+    );
     
     res.json({
       success: true,
@@ -228,6 +339,55 @@ router.put('/:id/password', async (req, res) => {
     res.status(500).json({
       success: false,
       error: '修改密码失败'
+    });
+  }
+});
+
+// 删除用户
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    
+    // 检查用户是否存在
+    const user = await database.get(
+      'SELECT * FROM users WHERE id = ?',
+      [id]
+    );
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      });
+    }
+    
+    // 检查是否有关联的预约
+    const appointmentCount = await database.get(
+      'SELECT COUNT(*) as count FROM appointments WHERE user_id = ? AND status != ?',
+      [id, 'cancelled']
+    );
+    
+    if (appointmentCount.count > 0) {
+      return res.status(400).json({
+        success: false,
+        error: '该用户还有未完成的预约，无法删除'
+      });
+    }
+    
+    await database.run(
+      'DELETE FROM users WHERE id = ?',
+      [id]
+    );
+    
+    res.json({
+      success: true,
+      message: '用户删除成功'
+    });
+  } catch (error) {
+    console.error('删除用户失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '删除用户失败'
     });
   }
 });
@@ -244,7 +404,12 @@ router.get('/search', async (req, res) => {
       });
     }
     
-    const users = await User.search(keyword);
+    const users = await database.all(`
+      SELECT id, username, email, phone, created_at
+      FROM users
+      WHERE username LIKE ? OR email LIKE ?
+      ORDER BY created_at DESC
+    `, [`%${keyword}%`, `%${keyword}%`]);
     
     res.json({
       success: true,
@@ -259,26 +424,77 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// 获取所有用户（管理员功能）
-router.get('/', async (req, res) => {
+// 获取用户统计信息
+router.get('/:id/stats', async (req, res) => {
   try {
-    const users = await User.findAll({}, { orderBy: 'created_at DESC' });
+    const id = parseInt(req.params.id);
     
-    // 移除密码哈希
-    const safeUsers = users.map(user => {
-      delete user.password_hash;
-      return user;
-    });
+    // 检查用户是否存在
+    const user = await database.get(
+      'SELECT id, username FROM users WHERE id = ?',
+      [id]
+    );
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在'
+      });
+    }
+    
+    // 获取预约统计
+    const appointmentStats = await database.get(`
+      SELECT 
+        COUNT(*) as total_appointments,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_appointments,
+        COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_appointments,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_appointments,
+        COUNT(CASE WHEN status = 'confirmed' THEN 1 END) as confirmed_appointments
+      FROM appointments
+      WHERE user_id = ?
+    `, [id]);
+    
+    // 获取最常预约的服务类型
+    const favoriteServices = await database.all(`
+      SELECT 
+        service_type,
+        COUNT(*) as count
+      FROM appointments
+      WHERE user_id = ?
+      GROUP BY service_type
+      ORDER BY count DESC
+      LIMIT 3
+    `, [id]);
+    
+    // 获取最常预约的技师
+    const favoriteTherapists = await database.all(`
+      SELECT 
+        t.id,
+        t.name,
+        COUNT(*) as appointment_count
+      FROM appointments a
+      JOIN therapists t ON a.therapist_id = t.id
+      WHERE a.user_id = ?
+      GROUP BY t.id
+      ORDER BY appointment_count DESC
+      LIMIT 3
+    `, [id]);
     
     res.json({
       success: true,
-      users: safeUsers
+      stats: {
+        user_id: id,
+        username: user.username,
+        appointment_stats: appointmentStats,
+        favorite_services: favoriteServices,
+        favorite_therapists: favoriteTherapists
+      }
     });
   } catch (error) {
-    console.error('获取用户列表失败:', error);
+    console.error('获取用户统计失败:', error);
     res.status(500).json({
       success: false,
-      error: '获取用户列表失败'
+      error: '获取用户统计失败'
     });
   }
 });

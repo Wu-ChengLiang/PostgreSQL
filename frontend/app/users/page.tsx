@@ -32,7 +32,9 @@ export default function UsersPage() {
     try {
       setLoading(true)
       const response = await userApi.list(roleFilter ? { role: roleFilter } : undefined)
-      setUsers(response.data)
+      // Handle SQLite API response format
+      const users = response.data?.users || response.data || []
+      setUsers(users)
     } catch (error) {
       console.error('Failed to fetch users:', error)
     } finally {

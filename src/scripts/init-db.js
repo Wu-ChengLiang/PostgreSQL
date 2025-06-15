@@ -1,33 +1,55 @@
-const database = require('../config/database-sqlite');
+#!/usr/bin/env node
 
-async function initializeDatabase() {
-  try {
-    console.log('🚀 开始初始化数据库...');
-    
-    // 连接数据库（会自动创建表和初始数据）
-    await database.connect();
-    
-    console.log('✅ 数据库初始化完成！');
-    
-    // 验证数据
-    const userCount = await database.get('SELECT COUNT(*) as count FROM users');
-    console.log(`  - 用户数量: ${userCount.count}`);
-    
-    const storeCount = await database.get('SELECT COUNT(*) as count FROM stores');
-    console.log(`  - 门店数量: ${storeCount.count}`);
-    
-    const therapistCount = await database.get('SELECT COUNT(*) as count FROM therapists');
-    console.log(`  - 技师数量: ${therapistCount.count}`);
-    
-    const appointmentCount = await database.get('SELECT COUNT(*) as count FROM appointments');
-    console.log(`  - 预约数量: ${appointmentCount.count}`);
-    
-    await database.close();
-  } catch (error) {
-    console.error('❌ 数据库初始化失败:', error);
-    process.exit(1);
-  }
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
+
+const dbPath = path.join(__dirname, '../../data.db');
+
+// Create database directory if it doesn't exist
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
 }
 
-// 运行初始化
-initializeDatabase();
+console.log('Initializing SQLite database...');
+
+const db = new sqlite3.Database(dbPath);
+
+// Read and execute schema
+const schemaPath = path.join(__dirname, '../database/schema.sql');
+const schema = fs.readFileSync(schemaPath, 'utf8');
+
+// Read and execute seed data
+const seedPath = path.join(__dirname, '../database/seed.sql');
+const seed = fs.readFileSync(seedPath, 'utf8');
+
+db.serialize(() => {
+    // Execute schema
+    const schemaStatements = schema.split(';').filter(stmt => stmt.trim());
+    schemaStatements.forEach(stmt => {
+        if (stmt.trim()) {
+            db.run(stmt, (err) => {
+                if (err) {
+                    console.error('Error executing schema:', err);
+                }
+            });
+        }
+    });
+
+    // Execute seed data
+    const seedStatements = seed.split(';').filter(stmt => stmt.trim());
+    seedStatements.forEach(stmt => {
+        if (stmt.trim()) {
+            db.run(stmt, (err) => {
+                if (err) {
+                    console.error('Error executing seed:', err);
+                }
+            });
+        }
+    });
+
+    console.log('Database initialization completed!');
+});
+
+db.close();

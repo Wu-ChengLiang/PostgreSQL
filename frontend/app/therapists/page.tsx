@@ -47,7 +47,9 @@ export default function TherapistsPage() {
     try {
       setLoading(true)
       const response = await therapistApi.list()
-      setTherapists(response.data)
+      // Handle SQLite API response format
+      const therapists = response.data?.therapists || response.data || []
+      setTherapists(therapists)
     } catch (error) {
       console.error('Failed to fetch therapists:', error)
     } finally {
@@ -62,9 +64,10 @@ export default function TherapistsPage() {
         storeApi.list(),
         specialtyApi.list(),
       ])
-      setUsers(usersRes.data)
-      setStores(storesRes.data)
-      setSpecialties(specialtiesRes.data)
+      // Handle SQLite API response format
+      setUsers(usersRes.data?.users || usersRes.data || [])
+      setStores(storesRes.data?.stores || storesRes.data || [])
+      setSpecialties(specialtiesRes.data?.specialties || specialtiesRes.data || [])
     } catch (error) {
       console.error('Failed to fetch dropdown data:', error)
     }
@@ -73,7 +76,9 @@ export default function TherapistsPage() {
   const fetchSchedules = async (therapistId: number) => {
     try {
       const response = await therapistApi.getSchedules(therapistId)
-      setSchedules(response.data)
+      // Handle SQLite API response format
+      const schedules = response.data?.schedules || response.data || []
+      setSchedules(schedules)
     } catch (error) {
       console.error('Failed to fetch schedules:', error)
     }
