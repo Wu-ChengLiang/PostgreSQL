@@ -123,6 +123,57 @@ const query = async (text, params) => {
     return { rows: results };
   }
   
+  // Handle get_therapist_appointments function call
+  if (text.includes('get_therapist_appointments')) {
+    const therapist_name = params[0];
+    const store_name = params[1];
+    const service_type = params[2];
+    
+    let filtered = therapists;
+    
+    // Filter by therapist name
+    if (therapist_name) {
+      filtered = filtered.filter(t => 
+        t.name.toLowerCase().includes(therapist_name.toLowerCase())
+      );
+    }
+    
+    // Filter by store name
+    if (store_name) {
+      filtered = filtered.filter(t => {
+        const store = stores.find(s => s.id === t.store_id);
+        return store && store.name.toLowerCase().includes(store_name.toLowerCase());
+      });
+    }
+    
+    // Filter by service type
+    if (service_type && service_type !== null) {
+      filtered = filtered.filter(t => 
+        t.specialties && t.specialties.some(s => 
+          s.toLowerCase().includes(service_type.toLowerCase())
+        )
+      );
+    }
+    
+    // Join with stores and format result
+    const result = filtered.map(t => {
+      const store = stores.find(s => s.id === t.store_id);
+      return {
+        id: t.id,
+        name: t.name,
+        title: t.title,
+        store_id: t.store_id,
+        store_name: store ? store.name : null,
+        specialties: t.specialties || [],
+        experience_years: t.experience_years || 0,
+        rating_count: t.rating_count || 0,
+        is_recommended: t.is_recommended || false
+      };
+    });
+    
+    return { rows: result };
+  }
+  
   // Appointments queries
   if (text.includes('SELECT * FROM appointments')) {
     if (text.includes('WHERE user_id')) {

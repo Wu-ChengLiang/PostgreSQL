@@ -5,21 +5,37 @@ const pool = require('../../config/database');
 // 获取所有技师或查询排班
 router.get('/', async (req, res) => {
   try {
-    const { store_id, specialty, action, therapist_name, store_name, date } = req.query;
+    const { store_id, specialty, action, therapist_name, store_name, date, service_type } = req.query;
     
     // 处理查询排班的特殊action
     if (action === 'query_schedule') {
-      // 使用数据库中的 get_therapist_appointments 函数
-      const result = await pool.query(
-        'SELECT * FROM get_therapist_appointments($1, $2)',
-        [therapist_name || null, store_name || null]
-      );
-      
-      return res.json({
-        action: 'query_schedule',
-        therapists: result.rows,
-        date: date || new Date().toISOString().split('T')[0]
-      });
+      try {
+        console.log('Query schedule params:', { therapist_name, store_name, service_type });
+        // 使用数据库中的 get_therapist_appointments 函数
+        const result = await pool.query(
+          'SELECT * FROM get_therapist_appointments($1, $2, $3)',
+          [therapist_name || null, store_name || null, service_type || null]
+        );
+        console.log('Query result:', result);
+        
+        // 如果没有结果，返回空数组
+        if (!result || !result.rows || result.rows.length === 0) {
+          return res.json({
+            action: 'query_schedule',
+            therapists: [],
+            date: date || new Date().toISOString().split('T')[0]
+          });
+        }
+        
+        return res.json({
+          action: 'query_schedule',
+          therapists: result.rows,
+          date: date || new Date().toISOString().split('T')[0]
+        });
+      } catch (err) {
+        console.error('Query schedule error:', err);
+        return res.status(400).json({ error: 'Failed to query therapist schedule' });
+      }
     }
     
     // 原有的获取技师列表逻辑
@@ -38,8 +54,10 @@ router.get('/', async (req, res) => {
       query += ` AND t.store_id = $${params.length}`;
     }
     
-    if (specialty) {
-      params.push(specialty);
+    // 支持specialty或service_type参数
+    const specialtyParam = specialty || service_type;
+    if (specialtyParam) {
+      params.push(specialtyParam);
       query += ` AND EXISTS (
         SELECT 1 FROM therapist_specialties ts2 
         WHERE ts2.therapist_id = t.id AND ts2.specialty ILIKE $${params.length}
