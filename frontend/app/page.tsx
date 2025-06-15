@@ -9,6 +9,7 @@ import { dashboardApi, appointmentApi } from '@/lib/api'
 import { DashboardStats, AppointmentTrend, TherapistUtilization as TherapistUtilizationType, Appointment } from '@/types/appointment'
 import { Calendar, Clock, User, MapPin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { t } from '@/lib/i18n'
 
 export default function Home() {
   const router = useRouter()
@@ -34,17 +35,56 @@ export default function Home() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const [statsRes, trendsRes, utilizationRes, appointmentsRes] = await Promise.all([
-        dashboardApi.getStats(),
-        dashboardApi.getAppointmentTrends(30),
-        dashboardApi.getTherapistUtilization(),
-        appointmentApi.list({ status: 'scheduled' }),
-      ])
-
-      setStats(statsRes.data)
-      setAppointmentTrends(trendsRes.data)
-      setTherapistUtilization(utilizationRes.data)
-      setRecentAppointments(appointmentsRes.data.slice(0, 5))
+      
+      // 获取仪表板统计数据
+      try {
+        const statsRes = await dashboardApi.getStats()
+        if (statsRes.data?.stats) {
+          setStats({
+            totalUsers: statsRes.data.stats.total_users || 0,
+            totalTherapists: statsRes.data.stats.total_therapists || 0,
+            totalAppointments: statsRes.data.stats.total_appointments || 0,
+            totalStores: statsRes.data.stats.total_stores || 0,
+            todayAppointments: statsRes.data.stats.today_appointments || 0,
+            weekRevenue: 0,
+            monthRevenue: 0,
+            averageRating: 4.5,
+          })
+          
+          // 设置预约趋势
+          if (statsRes.data.stats.appointment_trend) {
+            setAppointmentTrends(statsRes.data.stats.appointment_trend.map((item: any) => ({
+              date: item.date,
+              count: item.count,
+              revenue: item.count * 200 // 假设每个预约200元
+            })))
+          }
+          
+          // 设置技师利用率
+          if (statsRes.data.stats.therapist_utilization) {
+            setTherapistUtilization(statsRes.data.stats.therapist_utilization.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              utilization: item.utilization_rate || 0,
+              appointments: item.appointment_count || 0,
+              revenue: item.appointment_count * 200 || 0
+            })))
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error)
+      }
+      
+      // 获取最近预约
+      try {
+        const appointmentsRes = await appointmentApi.list()
+        if (appointmentsRes.data?.appointments) {
+          setRecentAppointments(appointmentsRes.data.appointments.slice(0, 5))
+        }
+      } catch (error) {
+        console.error('Failed to fetch appointments:', error)
+      }
+      
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
     } finally {
@@ -54,54 +94,54 @@ export default function Home() {
 
   const appointmentColumns: Column<Appointment>[] = [
     {
-      key: 'date',
-      header: 'Date',
+      key: 'appointment_date',
+      header: t('appointment.fields.date'),
       render: (value) => (
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-gray-400" />
-          {new Date(value).toLocaleDateString()}
+          {value ? new Date(value).toLocaleDateString('zh-CN') : '-'}
         </div>
       ),
       sortable: true,
     },
     {
-      key: 'startTime',
-      header: 'Time',
+      key: 'start_time',
+      header: t('appointment.fields.time'),
       render: (value, row) => (
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-gray-400" />
-          {value} - {row.endTime}
+          {value || '-'} - {(row as any).end_time || '-'}
         </div>
       ),
     },
     {
-      key: 'user.name',
-      header: 'Patient',
-      render: (value) => (
+      key: 'user_name',
+      header: t('appointment.fields.patient'),
+      render: (value, row) => (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-gray-400" />
-          {value}
+          {value || (row as any).user?.username || '-'}
         </div>
       ),
     },
     {
-      key: 'therapist.user.name',
-      header: 'Therapist',
-      render: (value) => value || 'N/A',
+      key: 'therapist_name',
+      header: t('appointment.fields.therapist'),
+      render: (value, row) => value || (row as any).therapist?.name || '-',
     },
     {
-      key: 'store.name',
-      header: 'Location',
-      render: (value) => (
+      key: 'store_name',
+      header: t('appointment.fields.location'),
+      render: (value, row) => (
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-gray-400" />
-          {value}
+          {value || (row as any).store?.name || '-'}
         </div>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('appointment.fields.status'),
       render: (value) => (
         <span
           className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -111,10 +151,14 @@ export default function Home() {
               ? 'bg-green-100 text-green-800'
               : value === 'cancelled'
               ? 'bg-red-100 text-red-800'
+              : value === 'confirmed'
+              ? 'bg-green-100 text-green-800'
+              : value === 'pending'
+              ? 'bg-yellow-100 text-yellow-800'
               : 'bg-gray-100 text-gray-800'
           }`}
         >
-          {value}
+          {t(`appointment.status.${value}`) || value}
         </span>
       ),
     },
@@ -123,9 +167,9 @@ export default function Home() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
         <p className="text-gray-500 mt-2">
-          Welcome to your appointment booking system dashboard
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
@@ -137,7 +181,7 @@ export default function Home() {
       </div>
 
       <DataTable
-        title="Recent Appointments"
+        title={t('dashboard.table.recentAppointments')}
         data={recentAppointments}
         columns={appointmentColumns}
         loading={loading}
@@ -149,7 +193,7 @@ export default function Home() {
             onClick={() => router.push(`/appointments/${row.id}`)}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            View Details
+            {t('common.viewDetails')}
           </button>
         )}
       />
@@ -159,10 +203,10 @@ export default function Home() {
           onClick={() => router.push('/appointments')}
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Appointments</h3>
-          <p className="text-gray-600 mt-2">Manage all appointments</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.cards.appointments')}</h3>
+          <p className="text-gray-600 mt-2">{t('dashboard.cards.appointmentsDesc')}</p>
           <span className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            View All →
+            {t('common.viewAll')} →
           </span>
         </button>
 
@@ -170,10 +214,10 @@ export default function Home() {
           onClick={() => router.push('/therapists')}
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Therapists</h3>
-          <p className="text-gray-600 mt-2">Manage therapist profiles</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.cards.therapists')}</h3>
+          <p className="text-gray-600 mt-2">{t('dashboard.cards.therapistsDesc')}</p>
           <span className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            View All →
+            {t('common.viewAll')} →
           </span>
         </button>
 
@@ -181,10 +225,10 @@ export default function Home() {
           onClick={() => router.push('/stores')}
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Stores</h3>
-          <p className="text-gray-600 mt-2">Manage clinic locations</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.cards.stores')}</h3>
+          <p className="text-gray-600 mt-2">{t('dashboard.cards.storesDesc')}</p>
           <span className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            View All →
+            {t('common.viewAll')} →
           </span>
         </button>
 
@@ -192,10 +236,10 @@ export default function Home() {
           onClick={() => router.push('/users')}
           className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow text-left"
         >
-          <h3 className="text-lg font-semibold text-gray-900">Users</h3>
-          <p className="text-gray-600 mt-2">Manage system users</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.cards.users')}</h3>
+          <p className="text-gray-600 mt-2">{t('dashboard.cards.usersDesc')}</p>
           <span className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            View All →
+            {t('common.viewAll')} →
           </span>
         </button>
       </div>

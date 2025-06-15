@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AppointmentTrend } from '@/types/appointment'
 import { BarChart3, LineChart, TrendingUp } from 'lucide-react'
+import { t } from '@/lib/i18n'
 
 interface AppointmentChartProps {
   data: AppointmentTrend[]
@@ -32,8 +33,8 @@ export function AppointmentChart({ data, loading }: AppointmentChartProps) {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Appointment Trends</h3>
-          <p className="text-sm text-gray-500 mt-1">Last 30 days</p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.charts.appointmentTrend')}</h3>
+          <p className="text-sm text-gray-500 mt-1">最近30天</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -106,7 +107,7 @@ export function AppointmentChart({ data, loading }: AppointmentChartProps) {
                 fill="rgb(99 102 241)"
                 className="hover:r-6 transition-all cursor-pointer"
               >
-                <title>{`Date: ${new Date(d.date).toLocaleDateString()}\nAppointments: ${d.count}\nRevenue: $${d.revenue}`}</title>
+                <title>{`日期: ${new Date(d.date).toLocaleDateString('zh-CN')}\n预约数: ${d.count}\n营收: ¥${d.revenue}`}</title>
               </circle>
             ))}
 
@@ -170,7 +171,7 @@ export function AppointmentChart({ data, loading }: AppointmentChartProps) {
                   fill="rgb(99 102 241)"
                   className="hover:opacity-80 transition-opacity cursor-pointer"
                 >
-                  <title>{`Date: ${new Date(d.date).toLocaleDateString()}\nAppointments: ${d.count}\nRevenue: $${d.revenue}`}</title>
+                  <title>{`日期: ${new Date(d.date).toLocaleDateString('zh-CN')}\n预约数: ${d.count}\n营收: ¥${d.revenue}`}</title>
                 </rect>
               )
             })}
@@ -198,15 +199,15 @@ export function AppointmentChart({ data, loading }: AppointmentChartProps) {
 
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div className="text-center">
-          <p className="text-sm text-gray-500">Total Appointments</p>
+          <p className="text-sm text-gray-500">{t('dashboard.stats.totalAppointments')}</p>
           <p className="text-xl font-semibold text-gray-900">
             {data.reduce((sum, d) => sum + d.count, 0).toLocaleString()}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-500">Total Revenue</p>
+          <p className="text-sm text-gray-500">总营收</p>
           <p className="text-xl font-semibold text-gray-900">
-            ${data.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()}
+            ¥{data.reduce((sum, d) => sum + d.revenue, 0).toLocaleString()}
           </p>
         </div>
       </div>

@@ -4,6 +4,7 @@ import React from 'react'
 import { Card } from '@/components/ui/card'
 import { Users, Calendar, Store, UserCheck, TrendingUp, DollarSign, Star, Clock } from 'lucide-react'
 import { DashboardStats } from '@/types/appointment'
+import { t } from '@/lib/i18n'
 
 interface StatsCardsProps {
   stats: DashboardStats
@@ -13,7 +14,7 @@ interface StatsCardsProps {
 export function StatsCards({ stats, loading }: StatsCardsProps) {
   const cards = [
     {
-      title: 'Total Users',
+      title: t('dashboard.stats.totalUsers'),
       value: stats.totalUsers,
       icon: Users,
       color: 'bg-blue-500',
@@ -21,7 +22,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
       textColor: 'text-blue-600',
     },
     {
-      title: 'Total Therapists',
+      title: t('dashboard.stats.totalTherapists'),
       value: stats.totalTherapists,
       icon: UserCheck,
       color: 'bg-green-500',
@@ -29,7 +30,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
       textColor: 'text-green-600',
     },
     {
-      title: 'Total Appointments',
+      title: t('dashboard.stats.totalAppointments'),
       value: stats.totalAppointments,
       icon: Calendar,
       color: 'bg-purple-500',
@@ -37,7 +38,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
       textColor: 'text-purple-600',
     },
     {
-      title: 'Total Stores',
+      title: t('dashboard.stats.totalStores'),
       value: stats.totalStores,
       icon: Store,
       color: 'bg-orange-500',
@@ -45,7 +46,7 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
       textColor: 'text-orange-600',
     },
     {
-      title: 'Today\'s Appointments',
+      title: t('dashboard.stats.todayAppointments'),
       value: stats.todayAppointments,
       icon: Clock,
       color: 'bg-indigo-500',
@@ -53,23 +54,23 @@ export function StatsCards({ stats, loading }: StatsCardsProps) {
       textColor: 'text-indigo-600',
     },
     {
-      title: 'Week Revenue',
-      value: `$${stats.weekRevenue.toLocaleString()}`,
+      title: t('dashboard.stats.weekRevenue'),
+      value: `¥${stats.weekRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'bg-pink-500',
       bgColor: 'bg-pink-50',
       textColor: 'text-pink-600',
     },
     {
-      title: 'Month Revenue',
-      value: `$${stats.monthRevenue.toLocaleString()}`,
+      title: t('dashboard.stats.monthRevenue'),
+      value: `¥${stats.monthRevenue.toLocaleString()}`,
       icon: TrendingUp,
       color: 'bg-teal-500',
       bgColor: 'bg-teal-50',
       textColor: 'text-teal-600',
     },
     {
-      title: 'Average Rating',
+      title: t('dashboard.stats.averageRating'),
       value: stats.averageRating.toFixed(1),
       icon: Star,
       color: 'bg-yellow-500',
