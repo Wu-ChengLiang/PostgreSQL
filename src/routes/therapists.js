@@ -2,11 +2,27 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../../config/database');
 
-// 获取所有技师
+// 获取所有技师或查询排班
 router.get('/', async (req, res) => {
   try {
-    const { store_id, specialty } = req.query;
+    const { store_id, specialty, action, therapist_name, store_name, date } = req.query;
     
+    // 处理查询排班的特殊action
+    if (action === 'query_schedule') {
+      // 使用数据库中的 get_therapist_appointments 函数
+      const result = await pool.query(
+        'SELECT * FROM get_therapist_appointments($1, $2)',
+        [therapist_name || null, store_name || null]
+      );
+      
+      return res.json({
+        action: 'query_schedule',
+        therapists: result.rows,
+        date: date || new Date().toISOString().split('T')[0]
+      });
+    }
+    
+    // 原有的获取技师列表逻辑
     let query = `
       SELECT t.*, s.name as store_name, 
              array_agg(DISTINCT ts.specialty) as specialties

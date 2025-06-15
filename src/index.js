@@ -9,7 +9,7 @@ const itemRoutes = require('./routes/items');
 const userRoutes = require('./routes/users');
 const storeRoutes = require('./routes/stores');
 const therapistRoutes = require('./routes/therapists');
-const appointmentRoutes = require('./routes/appointments');
+const appointmentRoutes = require('./routes/appointments-public');
 const appointmentFunctions = require('./routes/appointment-functions');
 
 const app = express();
