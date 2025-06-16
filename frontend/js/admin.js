@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 设置编辑技师表单事件
     document.getElementById('editTherapistForm').onsubmit = handleEditTherapist;
+    
+    // 设置门店表单事件
+    document.getElementById('addStoreForm').onsubmit = handleAddStore;
+    document.getElementById('editStoreForm').onsubmit = handleEditStore;
 });
 
 // 显示登录页面
@@ -468,22 +472,210 @@ async function loadStores() {
         
         if (data.success) {
             const storesList = document.getElementById('storesList');
-            storesList.innerHTML = '<div class="store-grid">' + 
-                data.data.stores.map(store => `
-                    <div class="store-card">
+            storesList.innerHTML = data.data.stores.map(store => `
+                <div class="store-card">
+                    <div class="store-header">
                         <h3>${store.name}</h3>
-                        <div class="store-info">
-                            <p>地址：${store.address || '未设置'}</p>
-                            <p>电话：${store.phone || '未设置'}</p>
-                            <p>营业时间：${store.business_hours}</p>
-                            <p>技师数量：${store.therapist_count}人</p>
-                        </div>
+                        <span class="store-status ${store.status || 'active'}">${getStoreStatusText(store.status || 'active')}</span>
                     </div>
-                `).join('') + '</div>';
+                    <div class="store-info">
+                        <p><strong>地址：</strong>${store.address || '未设置'}</p>
+                        <p><strong>电话：</strong>${store.phone || '未设置'}</p>
+                        <p><strong>营业时间：</strong>${store.business_hours}</p>
+                        <p><strong>技师数量：</strong>${store.therapist_count || 0}人</p>
+                        ${store.manager ? `<p><strong>店长：</strong>${store.manager}</p>` : ''}
+                    </div>
+                    <div class="store-actions">
+                        <button class="btn btn-sm btn-primary" onclick="editStore(${store.id})">编辑</button>
+                        <button class="btn btn-sm btn-secondary" onclick="viewStoreTherapists(${store.id})">查看技师</button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteStore(${store.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
         }
     } catch (error) {
         console.error('加载门店列表失败:', error);
+        showMessage('加载门店列表失败', 'error');
     }
+}
+
+// 搜索门店
+function searchStores() {
+    const searchTerm = document.getElementById('storeSearchInput').value.toLowerCase();
+    const storeCards = document.querySelectorAll('.store-card');
+    
+    storeCards.forEach(card => {
+        const storeName = card.querySelector('h3').textContent.toLowerCase();
+        const storeAddress = card.querySelector('.store-info').textContent.toLowerCase();
+        
+        if (storeName.includes(searchTerm) || storeAddress.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// 获取门店状态文本
+function getStoreStatusText(status) {
+    const statusMap = {
+        'active': '营业中',
+        'maintenance': '装修中',
+        'closed': '已关闭'
+    };
+    return statusMap[status] || '营业中';
+}
+
+// 打开添加门店模态框
+function openAddStoreModal() {
+    document.getElementById('addStoreModal').style.display = 'block';
+    document.getElementById('addStoreForm').reset();
+}
+
+// 关闭添加门店模态框
+function closeAddStoreModal() {
+    document.getElementById('addStoreModal').style.display = 'none';
+    document.getElementById('addStoreForm').reset();
+}
+
+// 处理添加门店
+async function handleAddStore(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('storeName').value,
+        code: document.getElementById('storeCode').value,
+        address: document.getElementById('storeAddress').value,
+        phone: document.getElementById('storePhone').value,
+        manager: document.getElementById('storeManager').value,
+        business_hours: document.getElementById('storeHours').value,
+        description: document.getElementById('storeDescription').value
+    };
+    
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (data.success) {
+            showMessage('门店添加成功', 'success');
+            closeAddStoreModal();
+            loadStores();
+            loadStoresForFilter(); // 刷新筛选器
+        } else {
+            showMessage(data.error?.message || '添加失败', 'error');
+        }
+    } catch (error) {
+        console.error('添加门店失败:', error);
+        showMessage('添加失败，请稍后重试', 'error');
+    }
+}
+
+// 编辑门店
+async function editStore(id) {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores/${id}`);
+        
+        if (data.success) {
+            const store = data.data.store;
+            
+            document.getElementById('editStoreId').value = store.id;
+            document.getElementById('editStoreName').value = store.name;
+            document.getElementById('editStoreCode').value = store.code || '';
+            document.getElementById('editStoreAddress').value = store.address || '';
+            document.getElementById('editStorePhone').value = store.phone || '';
+            document.getElementById('editStoreManager').value = store.manager || '';
+            document.getElementById('editStoreHours').value = store.business_hours;
+            document.getElementById('editStoreDescription').value = store.description || '';
+            document.getElementById('editStoreStatus').value = store.status || 'active';
+            
+            document.getElementById('editStoreModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('获取门店信息失败:', error);
+        showMessage('获取门店信息失败', 'error');
+    }
+}
+
+// 关闭编辑门店模态框
+function closeEditStoreModal() {
+    document.getElementById('editStoreModal').style.display = 'none';
+    document.getElementById('editStoreForm').reset();
+}
+
+// 处理编辑门店
+async function handleEditStore(e) {
+    e.preventDefault();
+    
+    const storeId = document.getElementById('editStoreId').value;
+    const formData = {
+        name: document.getElementById('editStoreName').value,
+        code: document.getElementById('editStoreCode').value,
+        address: document.getElementById('editStoreAddress').value,
+        phone: document.getElementById('editStorePhone').value,
+        manager: document.getElementById('editStoreManager').value,
+        business_hours: document.getElementById('editStoreHours').value,
+        description: document.getElementById('editStoreDescription').value,
+        status: document.getElementById('editStoreStatus').value
+    };
+    
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores/${storeId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (data.success) {
+            showMessage('门店信息更新成功', 'success');
+            closeEditStoreModal();
+            loadStores();
+            loadStoresForFilter(); // 刷新筛选器
+        } else {
+            showMessage(data.error?.message || '更新失败', 'error');
+        }
+    } catch (error) {
+        console.error('更新门店失败:', error);
+        showMessage('更新失败，请稍后重试', 'error');
+    }
+}
+
+// 删除门店
+async function deleteStore(id) {
+    if (!confirm('确定要删除这个门店吗？删除后不可恢复！')) {
+        return;
+    }
+    
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (data.success) {
+            showMessage('门店已删除', 'success');
+            loadStores();
+            loadStoresForFilter(); // 刷新筛选器
+        } else {
+            showMessage(data.error?.message || '删除失败', 'error');
+        }
+    } catch (error) {
+        console.error('删除门店失败:', error);
+        showMessage('删除失败，请稍后重试', 'error');
+    }
+}
+
+// 查看门店技师
+function viewStoreTherapists(storeId) {
+    showSection('therapists');
+    // 设置门店筛选器
+    document.getElementById('filterStore').value = storeId;
+    loadTherapists();
 }
 
 // 初始化统计

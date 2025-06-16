@@ -146,8 +146,17 @@
 
                 <!-- 门店管理 -->
                 <section id="storesSection" class="content-section" style="display: none;">
-                    <h2>门店管理</h2>
-                    <div id="storesList">
+                    <div class="section-header">
+                        <h2>门店管理</h2>
+                        <button class="btn btn-primary" onclick="openAddStoreModal()">添加门店</button>
+                    </div>
+                    
+                    <div class="filters">
+                        <input type="text" id="storeSearchInput" class="form-control" placeholder="搜索门店名称..." onkeyup="searchStores()">
+                        <button class="btn btn-secondary" onclick="loadStores()">刷新列表</button>
+                    </div>
+                    
+                    <div id="storesList" class="store-grid">
                         <!-- 动态生成 -->
                     </div>
                 </section>
@@ -269,6 +278,107 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">更新</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加门店模态框 -->
+    <div id="addStoreModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddStoreModal()">&times;</span>
+            <h2>添加门店</h2>
+            <form id="addStoreForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="storeName">门店名称 *</label>
+                        <input type="text" id="storeName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="storeCode">门店编码 *</label>
+                        <input type="text" id="storeCode" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="storeAddress">门店地址 *</label>
+                    <input type="text" id="storeAddress" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="storePhone">联系电话</label>
+                        <input type="tel" id="storePhone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="storeManager">店长姓名</label>
+                        <input type="text" id="storeManager" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="storeHours">营业时间 *</label>
+                    <input type="text" id="storeHours" class="form-control" value="9:00-21:00" required>
+                </div>
+                <div class="form-group">
+                    <label for="storeDescription">门店描述</label>
+                    <textarea id="storeDescription" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddStoreModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">添加门店</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑门店模态框 -->
+    <div id="editStoreModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditStoreModal()">&times;</span>
+            <h2>编辑门店</h2>
+            <form id="editStoreForm">
+                <input type="hidden" id="editStoreId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStoreName">门店名称 *</label>
+                        <input type="text" id="editStoreName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStoreCode">门店编码 *</label>
+                        <input type="text" id="editStoreCode" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editStoreAddress">门店地址 *</label>
+                    <input type="text" id="editStoreAddress" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editStorePhone">联系电话</label>
+                        <input type="tel" id="editStorePhone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStoreManager">店长姓名</label>
+                        <input type="text" id="editStoreManager" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editStoreHours">营业时间 *</label>
+                    <input type="text" id="editStoreHours" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editStoreDescription">门店描述</label>
+                    <textarea id="editStoreDescription" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editStoreStatus">状态</label>
+                    <select id="editStoreStatus" class="form-control">
+                        <option value="active">营业中</option>
+                        <option value="maintenance">装修中</option>
+                        <option value="closed">已关闭</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditStoreModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">更新门店</button>
+                </div>
             </form>
         </div>
     </div>
