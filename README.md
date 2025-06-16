@@ -1,4 +1,4 @@
-# 名医堂数据平台2.0
+# 名医堂数据平台 3.0
 
 专业的中医按摩预约管理系统，为客户提供便捷的技师搜索、预约服务，为门店提供高效的技师和预约管理功能。
 
@@ -46,19 +46,19 @@ node scripts/seed-therapists.js
 npm start
 ```
 
-服务器将在 http://localhost:8089 启动
+服务器将在 http://localhost:3001 启动
 
 ### 5. 访问系统
 
-- 客户端: http://localhost:8089/frontend/index.html
-- 管理后台: http://localhost:8089/frontend/admin.html
+- 客户端: http://localhost:3001
+- 管理后台: http://localhost:3001/admin.html
 - 默认管理员账号: admin / admin123
 
 ## API文档
 
 ### 基础信息
 
-- **基础URL**: `http://localhost:8089/api/v1`
+- **基础URL**: `http://localhost:3001/api/v1`
 - **响应格式**: JSON
 - **字符编码**: UTF-8
 
@@ -100,7 +100,41 @@ GET /client/therapists/search
 }
 ```
 
-#### 2. 查询技师排班
+#### 2. 查询门店技师及预约时间（新）
+
+```http
+GET /client/stores/:storeName/therapists-schedule
+```
+
+**参数**:
+- `storeName`: 门店名称（支持中文）
+
+**响应示例**:
+```json
+{
+    "success": true,
+    "data": {
+        "store": {
+            "id": 1,
+            "name": "名医堂·颈肩腰腿特色调理（宜山路店）",
+            "address": "上海市徐汇区宜山路"
+        },
+        "therapists": [{
+            "id": 1,
+            "name": "彭老师",
+            "position": "调理师",
+            "appointments": [{
+                "date": "2025-06-17",
+                "start_time": "10:00",
+                "end_time": "11:00",
+                "service": "推拿理疗"
+            }]
+        }]
+    }
+}
+```
+
+#### 3. 查询技师排班
 
 ```http
 GET /client/therapists/:id/schedule
@@ -123,7 +157,7 @@ GET /client/therapists/:id/schedule
 }
 ```
 
-#### 3. 创建预约
+#### 4. 创建预约
 
 ```http
 POST /client/appointments
@@ -141,13 +175,13 @@ POST /client/appointments
 }
 ```
 
-#### 4. 查看用户预约
+#### 5. 查看用户预约
 
 ```http
 GET /client/appointments/user?phone=13800138000
 ```
 
-#### 5. 取消预约
+#### 6. 取消预约
 
 ```http
 DELETE /client/appointments/:id
@@ -160,7 +194,7 @@ DELETE /client/appointments/:id
 }
 ```
 
-#### 6. 获取门店列表
+#### 7. 获取门店列表
 
 ```http
 GET /client/stores

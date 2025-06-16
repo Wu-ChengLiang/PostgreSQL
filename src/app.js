@@ -10,7 +10,7 @@ const clientRoutes = require('./routes/client');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 8089;
+const PORT = process.env.PORT || 3001;
 
 // 安全中间件
 app.use(helmet());
@@ -52,6 +52,9 @@ const adminLimiter = rateLimit({
     message: '请求过于频繁，请稍后再试'
 });
 
+// 静态文件服务
+app.use(express.static('frontend'));
+
 // 健康检查
 app.get('/health', (req, res) => {
     res.json({ 
@@ -91,7 +94,7 @@ app.use((err, req, res, next) => {
 
 // 启动服务器
 app.listen(PORT, () => {
-    console.log(`🚀 名医堂数据平台2.0 已启动`);
+    console.log(`🚀 名医堂数据平台3.0 已启动`);
     console.log(`📍 服务器地址: http://localhost:${PORT}`);
     console.log(`📚 API文档: http://localhost:${PORT}/api-docs`);
     console.log(`🏥 健康检查: http://localhost:${PORT}/health`);
