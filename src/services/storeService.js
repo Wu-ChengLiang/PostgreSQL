@@ -1,7 +1,19 @@
 const { getInstance } = require('../database/db');
+const { getCacheInstance } = require('../utils/cache');
 
 class StoreService {
+    constructor() {
+        this.cache = getCacheInstance();
+    }
+
     async getAllStores() {
+        // Check cache first
+        const cacheKey = 'stores:all';
+        const cached = this.cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         const db = getInstance();
         await db.connect();
 
@@ -16,6 +28,9 @@ class StoreService {
                  ORDER BY s.name`
             );
 
+            // Cache for 5 minutes
+            this.cache.set(cacheKey, stores, 300);
+
             return stores;
         } finally {
             await db.close();
@@ -23,6 +38,13 @@ class StoreService {
     }
 
     async getStoreDetail(id) {
+        // Check cache first
+        const cacheKey = `store:${id}`;
+        const cached = this.cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         const db = getInstance();
         await db.connect();
 
@@ -70,7 +92,7 @@ class StoreService {
                 [id]
             );
 
-            return {
+            const result = {
                 store: {
                     ...store,
                     statistics: {
@@ -81,6 +103,11 @@ class StoreService {
                 },
                 therapists: therapistsWithParsedSpecialties
             };
+
+            // Cache for 5 minutes
+            this.cache.set(cacheKey, result, 300);
+
+            return result;
         } finally {
             await db.close();
         }
@@ -89,6 +116,9 @@ class StoreService {
     async createStore(data) {
         const db = getInstance();
         await db.connect();
+
+        // Invalidate cache
+        this.cache.delete('stores:all');
 
         try {
             const result = await db.run(

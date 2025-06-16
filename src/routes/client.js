@@ -35,8 +35,8 @@ router.get('/stores/:storeName/therapists-schedule', async (req, res, next) => {
         const decodedStoreName = decodeURIComponent(storeName);
         
         // 查找门店
-        const storesData = await storeService.getAllStores();
-        const store = storesData.stores ? storesData.stores.find(s => s.name === decodedStoreName) : null;
+        const stores = await storeService.getAllStores();
+        const store = stores ? stores.find(s => s.name === decodedStoreName) : null;
         
         if (!store) {
             return res.status(404).json({

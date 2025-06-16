@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -13,12 +16,29 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // 安全中间件
-app.use(helmet());
-app.use(cors());
-app.use(compression());
+app.use(helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === 'production'
+}));
+
+// CORS配置
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: process.env.CORS_CREDENTIALS === 'true'
+}));
+
+// 压缩中间件
+app.use(compression({
+    filter: (req, res) => {
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    },
+    level: 6
+}));
 
 // 日志中间件
-app.use(morgan('combined'));
+app.use(morgan(process.env.LOG_FORMAT || 'combined'));
 
 // 解析JSON
 app.use(express.json());
@@ -40,16 +60,20 @@ app.use(express.static('.', {
 
 // 客户端API限流
 const clientLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1分钟
-    max: 60, // 每个IP最多60次请求
-    message: '请求过于频繁，请稍后再试'
+    windowMs: (parseInt(process.env.API_RATE_LIMIT_WINDOW) || 15) * 60 * 1000,
+    max: parseInt(process.env.API_RATE_LIMIT_MAX) || 100,
+    message: '请求过于频繁，请稍后再试',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // 管理端API限流
 const adminLimiter = rateLimit({
-    windowMs: 1 * 60 * 1000, // 1分钟
-    max: 100, // 每个IP最多100次请求
-    message: '请求过于频繁，请稍后再试'
+    windowMs: (parseInt(process.env.API_RATE_LIMIT_WINDOW) || 15) * 60 * 1000,
+    max: (parseInt(process.env.API_RATE_LIMIT_MAX) || 100) * 2, // Admin gets 2x limit
+    message: '请求过于频繁，请稍后再试',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // 静态文件服务
@@ -59,8 +83,20 @@ app.use(express.static('frontend'));
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'ok', 
-        service: '名医堂数据平台2.0',
+        service: '名医堂数据平台3.0',
+        version: '3.0.0',
         timestamp: new Date().toISOString() 
+    });
+});
+
+// 缓存状态
+app.get('/cache/stats', (req, res) => {
+    const { getCacheInstance } = require('./utils/cache');
+    const cache = getCacheInstance();
+    res.json({
+        status: 'ok',
+        stats: cache.getStats(),
+        timestamp: new Date().toISOString()
     });
 });
 

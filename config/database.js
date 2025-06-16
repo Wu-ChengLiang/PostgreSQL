@@ -1,47 +1,72 @@
-const { Pool } = require('pg');
+// Simplified database configuration - SQLite only
+const { getInstance } = require('./database-sqlite');
 
-// Try to create PostgreSQL pool
-let pool;
-let db;
-let useMock = false;
+// Get the singleton database instance
+const db = getInstance();
 
-// Check if we should use mock database
-if (process.env.USE_MOCK_DB === 'true') {
-  console.log('Using mock database (USE_MOCK_DB=true)');
-  db = require('./database-mock');
-  useMock = true;
-} else {
-  try {
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://dbuser:dbpassword@localhost:5432/clouddb',
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
-    
-    // Test connection synchronously
-    db = {
-      query: async (text, params) => {
-        try {
-          return await pool.query(text, params);
-        } catch (error) {
-          if (!useMock && error.code === 'ECONNREFUSED') {
-            console.log('PostgreSQL not available, switching to mock database');
-            const mockDb = require('./database-mock');
-            useMock = true;
-            return mockDb.query(text, params);
-          }
-          throw error;
+// Export a compatible interface
+module.exports = {
+    query: async (text, params) => {
+        // Convert PostgreSQL-style placeholders ($1, $2) to SQLite style (?, ?)
+        let sqliteQuery = text;
+        let sqliteParams = params;
+        
+        if (params && params.length > 0) {
+            // Replace $1, $2, etc. with ?
+            sqliteQuery = text.replace(/\$(\d+)/g, '?');
+            
+            // Reorder params if needed (PostgreSQL uses 1-based indexing)
+            const matches = text.match(/\$(\d+)/g);
+            if (matches) {
+                sqliteParams = [];
+                matches.forEach((match) => {
+                    const index = parseInt(match.substring(1)) - 1;
+                    sqliteParams.push(params[index]);
+                });
+            }
         }
-      },
-      pool
-    };
-  } catch (error) {
-    console.log('PostgreSQL not available, using mock database');
-    db = require('./database-mock');
-    useMock = true;
-  }
-}
-
-module.exports = db;
+        
+        // Execute query based on type
+        const operation = sqliteQuery.trim().toUpperCase();
+        
+        if (operation.startsWith('SELECT')) {
+            const rows = await db.all(sqliteQuery, sqliteParams);
+            return { rows };
+        } else if (operation.startsWith('INSERT') || operation.startsWith('UPDATE') || operation.startsWith('DELETE')) {
+            const result = await db.run(sqliteQuery, sqliteParams);
+            return {
+                rows: [],
+                rowCount: result.changes,
+                lastID: result.lastID
+            };
+        } else {
+            // For other operations (CREATE, DROP, etc.)
+            await db.run(sqliteQuery, sqliteParams);
+            return { rows: [] };
+        }
+    },
+    
+    // Direct access to database methods
+    run: (sql, params) => db.run(sql, params),
+    get: (sql, params) => db.get(sql, params),
+    all: (sql, params) => db.all(sql, params),
+    exec: (sql) => db.exec(sql),
+    
+    // Transaction support
+    beginTransaction: () => db.beginTransaction(),
+    commit: () => db.commit(),
+    rollback: () => db.rollback(),
+    
+    // Utility methods
+    close: () => db.close(),
+    getStats: () => db.getStats(),
+    vacuum: () => db.vacuum(),
+    analyze: () => db.analyze(),
+    optimize: () => db.optimize(),
+    
+    // For backward compatibility
+    pool: {
+        query: async (text, params) => module.exports.query(text, params),
+        end: () => db.close()
+    }
+};
