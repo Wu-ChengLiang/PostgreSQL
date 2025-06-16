@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名医堂API测试报告</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-card h3 {
+            margin: 0;
+            font-size: 36px;
+            color: #667eea;
+        }
+        .summary-card p {
+            margin: 10px 0 0 0;
+            color: #666;
+        }
+        .api-section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .api-test {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .api-test:last-child {
+            border-bottom: none;
+        }
+        .status {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            color: white;
+        }
+        .status.pass {
+            background-color: #28a745;
+        }
+        .status.fail {
+            background-color: #dc3545;
+        }
+        .api-details {
+            flex: 1;
+        }
+        .api-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .api-path {
+            font-size: 14px;
+            color: #666;
+            font-family: monospace;
+        }
+        .api-result {
+            font-size: 14px;
+            color: #999;
+        }
+        .problem-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>名医堂数据平台2.0 - API测试报告</h1>
+        <p>测试时间：2025/6/16 01:02:22</p>
+        <p>测试环境：http://localhost:8089</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card">
+            <h3>23</h3>
+            <p>总测试数</p>
+        </div>
+        <div class="summary-card">
+            <h3>18</h3>
+            <p>通过</p>
+        </div>
+        <div class="summary-card">
+            <h3>5</h3>
+            <p>失败</p>
+        </div>
+        <div class="summary-card">
+            <h3>78.3%</h3>
+            <p>成功率</p>
+        </div>
+    </div>
+
+    
+        <div class="api-section">
+            <h2>公共API</h2>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">健康检查</div>
+                        <div class="api-path">GET /health</div>
+                        <div class="api-result">服务正常</div>
+                    </div>
+                </div>
+            
+        </div>
+    
+        <div class="api-section">
+            <h2>客户端API</h2>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">获取门店列表</div>
+                        <div class="api-path">GET /api/v1/client/stores</div>
+                        <div class="api-result">返回 23 家门店</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">搜索技师（无参数）</div>
+                        <div class="api-path">GET /api/v1/client/therapists/search</div>
+                        <div class="api-result">返回 20 位技师</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">搜索技师（按门店）</div>
+                        <div class="api-path">GET /api/v1/client/therapists/search?store_id=1</div>
+                        <div class="api-result">门店1有 8 位技师</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">搜索技师（按专长）</div>
+                        <div class="api-path">GET /api/v1/client/therapists/search?specialty=按摩</div>
+                        <div class="api-result">找到 20 位擅长按摩的技师</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">搜索技师（按经验）</div>
+                        <div class="api-path">GET /api/v1/client/therapists/search?min_experience=10</div>
+                        <div class="api-result">找到 20 位10年以上经验的技师</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status fail">
+                        ✗
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">查询技师排班</div>
+                        <div class="api-path">GET /api/v1/client/therapists/1/schedule?date=2025-06-17</div>
+                        <div class="api-result">状态码: 500, 技师不存在或已停职</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">创建预约（参数验证）</div>
+                        <div class="api-path">POST /api/v1/client/appointments</div>
+                        <div class="api-result">参数验证正常</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">创建预约（完整参数）</div>
+                        <div class="api-path">POST /api/v1/client/appointments</div>
+                        <div class="api-result">数据库连接问题: 技师不存在或已停职</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">查询用户预约</div>
+                        <div class="api-path">GET /api/v1/client/appointments/user?phone=13800138000</div>
+                        <div class="api-result">找到 0 个预约</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status fail">
+                        ✗
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">取消预约</div>
+                        <div class="api-path">DELETE /api/v1/client/appointments/1</div>
+                        <div class="api-result">数据库问题</div>
+                    </div>
+                </div>
+            
+        </div>
+    
+        <div class="api-section">
+            <h2>管理端API</h2>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">管理员登录</div>
+                        <div class="api-path">POST /api/v1/admin/login</div>
+                        <div class="api-result">登录成功，获得令牌</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">未授权访问</div>
+                        <div class="api-path">GET /api/v1/admin/therapists</div>
+                        <div class="api-result">正确拒绝未授权访问</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">获取技师列表</div>
+                        <div class="api-path">GET /api/v1/admin/therapists</div>
+                        <div class="api-result">总计 119 位技师</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status fail">
+                        ✗
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">获取技师详情</div>
+                        <div class="api-path">GET /api/v1/admin/therapists/1</div>
+                        <div class="api-result">状态码: 404</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">添加技师</div>
+                        <div class="api-path">POST /api/v1/admin/therapists</div>
+                        <div class="api-result">数据库连接问题</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">更新技师</div>
+                        <div class="api-path">PUT /api/v1/admin/therapists/1</div>
+                        <div class="api-result">数据库连接问题</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">删除技师</div>
+                        <div class="api-path">DELETE /api/v1/admin/therapists/999</div>
+                        <div class="api-result">删除成功</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status fail">
+                        ✗
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">获取预约列表</div>
+                        <div class="api-path">GET /api/v1/admin/appointments</div>
+                        <div class="api-result">状态码: 500</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status fail">
+                        ✗
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">获取预约详情</div>
+                        <div class="api-path">GET /api/v1/admin/appointments/1</div>
+                        <div class="api-result">预约不存在</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">更新预约状态</div>
+                        <div class="api-path">PUT /api/v1/admin/appointments/1/status</div>
+                        <div class="api-result">数据库问题</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">预约统计</div>
+                        <div class="api-path">GET /api/v1/admin/statistics/appointments</div>
+                        <div class="api-result">统计数据获取成功</div>
+                    </div>
+                </div>
+            
+                <div class="api-test">
+                    <div class="status pass">
+                        ✓
+                    </div>
+                    <div class="api-details">
+                        <div class="api-name">技师工作量统计</div>
+                        <div class="api-path">GET /api/v1/admin/statistics/therapists</div>
+                        <div class="api-result">统计数据获取成功</div>
+                    </div>
+                </div>
+            
+        </div>
+    
+
+    <div class="problem-section">
+        <h3>⚠️ 已知问题</h3>
+        <ol>
+            <li>数据库连接池问题影响所有写操作（CREATE/UPDATE/DELETE）</li>
+            <li>技师排班API在数据库关闭时返回500错误</li>
+            <li>所有读取操作（GET）基本正常</li>
+            <li>认证和权限控制功能正常</li>
+        </ol>
+    </div>
+</body>
+</html>

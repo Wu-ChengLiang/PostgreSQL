@@ -27,6 +27,17 @@ app.use(express.urlencoded({ extended: true }));
 // 静态文件服务
 app.use('/frontend', express.static('frontend'));
 
+// 报告文件服务（根目录下的HTML文件）
+app.use(express.static('.', {
+    index: false,
+    extensions: ['html'],
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        }
+    }
+}));
+
 // 客户端API限流
 const clientLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1分钟
