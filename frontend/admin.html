@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名医堂管理后台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1>名医堂管理后台</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+            <p class="login-tip">默认账号：admin / admin123</p>
+        </div>
+    </div>
+
+    <!-- 管理界面 -->
+    <div id="adminPage" style="display: none;">
+        <!-- 顶部导航 -->
+        <nav class="admin-navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <h1>名医堂管理后台</h1>
+                </div>
+                <div class="nav-right">
+                    <span id="adminInfo"></span>
+                    <button class="btn btn-logout" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 侧边栏 -->
+        <div class="admin-layout">
+            <aside class="sidebar">
+                <ul class="menu">
+                    <li><a href="#" onclick="showSection('dashboard')" class="active">数据概览</a></li>
+                    <li><a href="#" onclick="showSection('therapists')">技师管理</a></li>
+                    <li><a href="#" onclick="showSection('appointments')">预约管理</a></li>
+                    <li><a href="#" onclick="showSection('stores')">门店管理</a></li>
+                    <li><a href="#" onclick="showSection('statistics')">统计报表</a></li>
+                </ul>
+            </aside>
+
+            <!-- 主内容区 -->
+            <main class="admin-content">
+                <!-- 数据概览 -->
+                <section id="dashboardSection" class="content-section">
+                    <h2>数据概览</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>今日预约</h3>
+                            <div class="stat-number" id="todayAppointments">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>本周预约</h3>
+                            <div class="stat-number" id="weekAppointments">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>在职技师</h3>
+                            <div class="stat-number" id="activeTherapists">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>门店数量</h3>
+                            <div class="stat-number" id="totalStores">-</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 技师管理 -->
+                <section id="therapistsSection" class="content-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>技师管理</h2>
+                        <button class="btn btn-primary" onclick="openAddTherapistModal()">添加技师</button>
+                    </div>
+                    
+                    <div class="filters">
+                        <select id="filterStore" class="form-control" onchange="loadTherapists()">
+                            <option value="">所有门店</option>
+                        </select>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>职位</th>
+                                <th>门店</th>
+                                <th>从业年限</th>
+                                <th>专长</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="therapistTableBody">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 预约管理 -->
+                <section id="appointmentsSection" class="content-section" style="display: none;">
+                    <h2>预约管理</h2>
+                    
+                    <div class="filters">
+                        <input type="date" id="filterDate" class="form-control" onchange="loadAppointments()">
+                        <select id="filterStatus" class="form-control" onchange="loadAppointments()">
+                            <option value="">所有状态</option>
+                            <option value="pending">待确认</option>
+                            <option value="confirmed">已确认</option>
+                            <option value="completed">已完成</option>
+                            <option value="cancelled">已取消</option>
+                        </select>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>预约时间</th>
+                                <th>客户姓名</th>
+                                <th>联系电话</th>
+                                <th>技师</th>
+                                <th>门店</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentTableBody">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 门店管理 -->
+                <section id="storesSection" class="content-section" style="display: none;">
+                    <h2>门店管理</h2>
+                    <div id="storesList">
+                        <!-- 动态生成 -->
+                    </div>
+                </section>
+
+                <!-- 统计报表 -->
+                <section id="statisticsSection" class="content-section" style="display: none;">
+                    <h2>统计报表</h2>
+                    
+                    <div class="date-range">
+                        <input type="date" id="statsStartDate" class="form-control">
+                        <span>至</span>
+                        <input type="date" id="statsEndDate" class="form-control">
+                        <button class="btn btn-primary" onclick="loadStatistics()">查询</button>
+                    </div>
+                    
+                    <div id="statisticsContent">
+                        <!-- 动态生成 -->
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 添加技师模态框 -->
+    <div id="addTherapistModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddTherapistModal()">&times;</span>
+            <h2>添加技师</h2>
+            <form id="addTherapistForm">
+                <div class="form-group">
+                    <label for="therapistStore">所属门店 *</label>
+                    <select id="therapistStore" class="form-control" required>
+                        <option value="">请选择门店</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="therapistName">姓名 *</label>
+                    <input type="text" id="therapistName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="therapistPosition">职位 *</label>
+                    <select id="therapistPosition" class="form-control" required>
+                        <option value="调理师">调理师</option>
+                        <option value="推拿师">推拿师</option>
+                        <option value="艾灸师">艾灸师</option>
+                        <option value="专家医师">专家医师</option>
+                        <option value="健康管理师">健康管理师</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="therapistExperience">从业年限 *</label>
+                    <input type="number" id="therapistExperience" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="therapistSpecialties">专长 * (多个用逗号分隔)</label>
+                    <input type="text" id="therapistSpecialties" class="form-control" placeholder="如：按摩，经络疏通，艾灸" required>
+                </div>
+                <div class="form-group">
+                    <label for="therapistPhone">联系电话</label>
+                    <input type="tel" id="therapistPhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="therapistHonors">荣誉称号</label>
+                    <input type="text" id="therapistHonors" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
