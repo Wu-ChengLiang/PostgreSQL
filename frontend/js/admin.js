@@ -1,6 +1,6 @@
 // API基础URL
-const API_BASE_URL = 'http://localhost:8089/api/v1/admin';
-const CLIENT_API_URL = 'http://localhost:8089/api/v1/client';
+const API_BASE_URL = '/api/v1/admin';
+const CLIENT_API_URL = '/api/v1/client';
 
 // 认证令牌
 let authToken = localStorage.getItem('adminToken');

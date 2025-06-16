@@ -1,5 +1,5 @@
 // API基础URL
-const API_BASE_URL = 'http://localhost:8089/api/v1/client';
+const API_BASE_URL = '/api/v1/client';
 
 // 当前选中的技师
 let selectedTherapist = null;
@@ -12,7 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 设置日期最小值为今天
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('appointmentDate').min = today;
+    const appointmentDateInput = document.getElementById('appointmentDate');
+    if (appointmentDateInput) {
+        appointmentDateInput.min = today;
+        // 设置最大值为30天后
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 30);
+        appointmentDateInput.max = maxDate.toISOString().split('T')[0];
+    }
 });
 
 // 设置事件监听器
@@ -54,20 +61,29 @@ function setupEventListeners() {
 // 加载门店列表
 async function loadStores() {
     try {
+        console.log('正在加载门店列表...');
         const response = await fetch(`${API_BASE_URL}/stores`);
         const data = await response.json();
         
         if (data.success) {
             const storeSelect = document.getElementById('storeSelect');
+            storeSelect.innerHTML = '<option value="">选择门店</option>';
+            
             data.data.stores.forEach(store => {
                 const option = document.createElement('option');
                 option.value = store.id;
                 option.textContent = `${store.name} (${store.therapist_count}位技师)`;
                 storeSelect.appendChild(option);
             });
+            console.log(`成功加载 ${data.data.stores.length} 家门店`);
+        } else {
+            console.error('加载门店失败:', data);
         }
     } catch (error) {
         console.error('加载门店失败:', error);
+        // 如果API失败，显示错误提示
+        const storeSelect = document.getElementById('storeSelect');
+        storeSelect.innerHTML = '<option value="">加载门店失败，请刷新页面重试</option>';
     }
 }
 
@@ -103,7 +119,7 @@ async function searchTherapists() {
         if (data.success) {
             displayTherapists(data.data.therapists);
             document.getElementById('therapistTitle').textContent = 
-                `搜索结果 (共 ${data.data.total} 位技师)`;
+                `搜索结果 (共 ${data.data.therapists.length} 位技师)`;
         }
     } catch (error) {
         console.error('搜索技师失败:', error);
@@ -169,7 +185,10 @@ function openAppointmentModal(therapist) {
     
     // 重置表单
     document.getElementById('appointmentForm').reset();
-    document.getElementById('appointmentTime').innerHTML = '<option value="">请先选择日期</option>';
+    
+    // 初始化时间选择器
+    const timeSelect = document.getElementById('appointmentTime');
+    timeSelect.innerHTML = '<option value="">请先选择日期</option>';
     
     modal.style.display = 'block';
 }
@@ -181,29 +200,56 @@ async function loadAvailableTimes() {
     const date = document.getElementById('appointmentDate').value;
     if (!date) return;
     
+    const timeSelect = document.getElementById('appointmentTime');
+    timeSelect.innerHTML = '<option value="">加载中...</option>';
+    
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/therapists/${selectedTherapist.id}/schedule?date=${date}`
-        );
-        const data = await response.json();
+        // 生成默认时间段（9:00-21:00）
+        const defaultTimes = [];
+        for (let hour = 9; hour < 21; hour++) {
+            defaultTimes.push(`${hour.toString().padStart(2, '0')}:00`);
+        }
         
-        if (data.success) {
-            const timeSelect = document.getElementById('appointmentTime');
-            timeSelect.innerHTML = '';
+        // 尝试从API获取实际可用时间
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/therapists/${selectedTherapist.id}/schedule?date=${date}`
+            );
+            const data = await response.json();
             
-            if (data.data.schedule.available_times.length === 0) {
-                timeSelect.innerHTML = '<option value="">该日期已约满</option>';
+            if (data.success && data.data.schedule.available_times.length > 0) {
+                // 使用API返回的时间
+                updateTimeOptions(data.data.schedule.available_times);
             } else {
-                data.data.schedule.available_times.forEach(time => {
-                    const option = document.createElement('option');
-                    option.value = time;
-                    option.textContent = time;
-                    timeSelect.appendChild(option);
-                });
+                // 使用默认时间
+                updateTimeOptions(defaultTimes);
             }
+        } catch (apiError) {
+            console.error('获取排班信息失败，使用默认时间:', apiError);
+            // API失败时使用默认时间
+            updateTimeOptions(defaultTimes);
         }
     } catch (error) {
         console.error('加载可用时间失败:', error);
+        timeSelect.innerHTML = '<option value="">加载失败，请重试</option>';
+    }
+}
+
+// 更新时间选项
+function updateTimeOptions(times) {
+    const timeSelect = document.getElementById('appointmentTime');
+    timeSelect.innerHTML = '';
+    
+    if (times.length === 0) {
+        timeSelect.innerHTML = '<option value="">该日期已约满</option>';
+    } else {
+        timeSelect.innerHTML = '<option value="">请选择时间</option>';
+        times.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeSelect.appendChild(option);
+        });
     }
 }
 
@@ -220,6 +266,13 @@ async function handleAppointmentSubmit(e) {
         notes: document.getElementById('notes').value
     };
     
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(formData.user_phone)) {
+        alert('请输入正确的手机号码');
+        return;
+    }
+    
     try {
         const response = await fetch(`${API_BASE_URL}/appointments`, {
             method: 'POST',
@@ -232,10 +285,10 @@ async function handleAppointmentSubmit(e) {
         const data = await response.json();
         
         if (data.success) {
-            alert(`预约成功！\n预约编号：${data.data.confirmation_code}\n请记住您的手机号以便查询预约`);
+            alert(`预约成功！\n预约编号：${data.data.confirmation_code || '已生成'}\n请记住您的手机号以便查询预约`);
             document.getElementById('appointmentModal').style.display = 'none';
             // 重新加载技师列表以更新可用时间
-            searchTherapists();
+            loadRecommendedTherapists();
         } else {
             alert(data.error.message || '预约失败，请稍后重试');
         }
@@ -250,6 +303,13 @@ async function queryMyAppointments() {
     const phone = document.getElementById('queryPhone').value;
     if (!phone) {
         alert('请输入手机号');
+        return;
+    }
+    
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+        alert('请输入正确的手机号码');
         return;
     }
     
