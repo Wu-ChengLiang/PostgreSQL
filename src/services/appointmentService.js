@@ -239,9 +239,9 @@ class AppointmentService {
                     t.position AS therapist_position,
                     s.name AS store_name
                 FROM appointments a
-                JOIN users u ON a.user_id = u.id
-                JOIN therapists t ON a.therapist_id = t.id
-                JOIN stores s ON a.store_id = s.id
+                LEFT JOIN users u ON a.user_id = u.id
+                LEFT JOIN therapists t ON a.therapist_id = t.id
+                LEFT JOIN stores s ON a.store_id = s.id
                 WHERE 1=1
             `;
 
@@ -267,13 +267,32 @@ class AppointmentService {
                 params.push(status);
             }
 
-            // 获取总数
-            const countQuery = query.replace(
-                'SELECT a.*, u.name AS user_name, u.phone AS user_phone, t.name AS therapist_name, t.position AS therapist_position, s.name AS store_name',
-                'SELECT COUNT(*) as count'
-            );
-            const countResult = await db.get(countQuery, params);
-            const count = countResult ? countResult.count : 0;
+            // 获取总数 - 简化查询避免复杂的字符串替换
+            let countQuery = `SELECT COUNT(*) as count FROM appointments a WHERE 1=1`;
+            const countParams = [];
+
+            if (storeId) {
+                countQuery += ' AND a.store_id = ?';
+                countParams.push(storeId);
+            }
+
+            if (therapistId) {
+                countQuery += ' AND a.therapist_id = ?';
+                countParams.push(therapistId);
+            }
+
+            if (date) {
+                countQuery += ' AND a.appointment_date = ?';
+                countParams.push(date);
+            }
+
+            if (status) {
+                countQuery += ' AND a.status = ?';
+                countParams.push(status);
+            }
+            
+            const countResult = await db.get(countQuery, countParams);
+            const count = countResult && countResult.count !== undefined ? countResult.count : 0;
 
             // 添加排序和分页
             const offset = (page - 1) * limit;
@@ -283,7 +302,7 @@ class AppointmentService {
             const appointments = await db.all(query, params);
 
             return {
-                appointments,
+                appointments: appointments || [],
                 total: count,
                 page,
                 limit,
@@ -312,9 +331,9 @@ class AppointmentService {
                     s.address AS store_address,
                     s.phone AS store_phone
                  FROM appointments a
-                 JOIN users u ON a.user_id = u.id
-                 JOIN therapists t ON a.therapist_id = t.id
-                 JOIN stores s ON a.store_id = s.id
+                 LEFT JOIN users u ON a.user_id = u.id
+                 LEFT JOIN therapists t ON a.therapist_id = t.id
+                 LEFT JOIN stores s ON a.store_id = s.id
                  WHERE a.id = ?`,
                 [id]
             );
@@ -427,28 +446,38 @@ class AppointmentService {
             const dailyStats = await db.all(query, params);
 
             // 计算总计
-            const totals = await db.get(
-                `SELECT 
-                    COUNT(*) AS total,
-                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
-                    SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
-                    SUM(CASE WHEN status = 'no_show' THEN 1 ELSE 0 END) AS no_show
-                 FROM appointments
-                 WHERE appointment_date BETWEEN ? AND ?
-                 ${storeId ? 'AND store_id = ?' : ''}`,
-                params
-            );
+            const totalsQuery = `SELECT 
+                COUNT(*) AS total,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+                SUM(CASE WHEN status = 'no_show' THEN 1 ELSE 0 END) AS no_show
+             FROM appointments
+             WHERE appointment_date BETWEEN ? AND ?
+             ${storeId ? 'AND store_id = ?' : ''}`;
+             
+            const totalsResult = await db.get(totalsQuery, params);
+            
+            // 修复统计数据的空值处理
+            const totals = totalsResult || {};
+            const totalAppointments = totals.total || 0;
+            const completedAppointments = totals.completed || 0;
+            const cancelledAppointments = totals.cancelled || 0;
+            const noShowAppointments = totals.no_show || 0;
 
-            return {
-                daily_statistics: dailyStats,
+            const result = {
+                daily_statistics: dailyStats || [],
                 totals: {
-                    total_appointments: totals.total,
-                    completed_appointments: totals.completed,
-                    cancelled_appointments: totals.cancelled,
-                    no_show_appointments: totals.no_show,
-                    completion_rate: totals.total > 0 ? (totals.completed / totals.total * 100).toFixed(2) + '%' : '0%'
+                    total_appointments: totalAppointments,
+                    completed_appointments: completedAppointments,
+                    cancelled_appointments: cancelledAppointments,
+                    no_show_appointments: noShowAppointments,
+                    completion_rate: totalAppointments > 0 ? 
+                        (completedAppointments / totalAppointments * 100).toFixed(2) + '%' : 
+                        '0%'
                 }
             };
+            
+            return result;
         } finally {
             await db.close();
         }

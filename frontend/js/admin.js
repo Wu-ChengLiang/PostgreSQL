@@ -115,10 +115,21 @@ function showSection(section) {
     document.querySelectorAll('.menu a').forEach(a => {
         a.classList.remove('active');
     });
-    event.target.classList.add('active');
+    
+    // 找到对应的菜单项并激活
+    const targetMenuItem = document.querySelector(`.menu a[onclick*="${section}"]`);
+    if (targetMenuItem) {
+        targetMenuItem.classList.add('active');
+    }
     
     // 显示选中的区域
-    document.getElementById(`${section}Section`).style.display = 'block';
+    const targetSection = document.getElementById(`${section}Section`);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    }
+    
+    // TODO: 更新URL hash来记住当前页面 ✓
+    window.location.hash = section;
     
     // 加载对应的数据
     switch(section) {
@@ -138,6 +149,39 @@ function showSection(section) {
             initStatistics();
             break;
     }
+}
+
+// TODO: 页面加载时检查URL hash并显示对应页面 ✓
+function initializePage() {
+    // 从URL hash获取当前应该显示的页面
+    const hash = window.location.hash.substring(1); // 去掉 # 号
+    const validSections = ['dashboard', 'therapists', 'appointments', 'stores', 'statistics'];
+    
+    // 如果hash有效，显示对应页面，否则显示默认的数据概览页面
+    const currentSection = validSections.includes(hash) ? hash : 'dashboard';
+    
+    showSection(currentSection);
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    initializePage();
+    
+    // 监听浏览器前进后退按钮
+    window.addEventListener('hashchange', function() {
+        const hash = window.location.hash.substring(1);
+        const validSections = ['dashboard', 'therapists', 'appointments', 'stores', 'statistics'];
+        
+        if (validSections.includes(hash)) {
+            showSection(hash);
+        }
+    });
+});
+
+// 修改菜单链接的点击处理，防止默认行为
+function handleMenuClick(event, section) {
+    event.preventDefault();
+    showSection(section);
 }
 
 // 加载数据概览
@@ -709,11 +753,17 @@ async function loadStatistics() {
         
         const content = document.getElementById('statisticsContent');
         
-        // 预约统计
-        const appointmentSummary = appointmentStats.data.statistics.totals;
+        // TODO: 修复统计数据的空值处理 ✓
+        // 预约统计 - 添加空值检查
+        const appointmentSummary = appointmentStats?.data?.statistics?.totals || {
+            total_appointments: 0,
+            completed_appointments: 0,
+            cancelled_appointments: 0,
+            completion_rate: '0%'
+        };
         
-        // 技师工作量前5
-        const topTherapists = therapistStats.data.statistics.slice(0, 5);
+        // 技师工作量前5 - 添加空值检查
+        const topTherapists = therapistStats?.data?.statistics?.slice(0, 5) || [];
         
         content.innerHTML = `
             <div class="statistics-summary">
@@ -721,19 +771,19 @@ async function loadStatistics() {
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">总预约数</div>
-                        <div class="summary-value">${appointmentSummary.total_appointments}</div>
+                        <div class="summary-value">${appointmentSummary.total_appointments || 0}</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">已完成</div>
-                        <div class="summary-value">${appointmentSummary.completed_appointments}</div>
+                        <div class="summary-value">${appointmentSummary.completed_appointments || 0}</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">已取消</div>
-                        <div class="summary-value">${appointmentSummary.cancelled_appointments}</div>
+                        <div class="summary-value">${appointmentSummary.cancelled_appointments || 0}</div>
                     </div>
                     <div class="summary-item">
                         <div class="summary-label">完成率</div>
-                        <div class="summary-value">${appointmentSummary.completion_rate}</div>
+                        <div class="summary-value">${appointmentSummary.completion_rate || '0%'}</div>
                     </div>
                 </div>
             </div>
@@ -751,17 +801,21 @@ async function loadStatistics() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${topTherapists.map(t => `
+                        ${topTherapists.length > 0 ? topTherapists.map(t => `
                             <tr>
-                                <td>${t.name}</td>
-                                <td>${t.store_name}</td>
-                                <td>${t.total_appointments}</td>
-                                <td>${t.completed_appointments}</td>
-                                <td>${t.total_appointments > 0 ? 
-                                    Math.round(t.completed_appointments / t.total_appointments * 100) + '%' : 
+                                <td>${t.name || '-'}</td>
+                                <td>${t.store_name || '-'}</td>
+                                <td>${t.total_appointments || 0}</td>
+                                <td>${t.completed_appointments || 0}</td>
+                                <td>${(t.total_appointments || 0) > 0 ? 
+                                    Math.round((t.completed_appointments || 0) / (t.total_appointments || 1) * 100) + '%' : 
                                     '0%'}</td>
                             </tr>
-                        `).join('')}
+                        `).join('') : `
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #666;">暂无数据</td>
+                            </tr>
+                        `}
                     </tbody>
                 </table>
             </div>
@@ -769,6 +823,35 @@ async function loadStatistics() {
     } catch (error) {
         console.error('加载统计数据失败:', error);
         showMessage('加载统计数据失败', 'error');
+        
+        // TODO: 显示错误状态的统计界面 ✓
+        const content = document.getElementById('statisticsContent');
+        content.innerHTML = `
+            <div class="statistics-summary">
+                <h3>预约统计</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">总预约数</div>
+                        <div class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">已完成</div>
+                        <div class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">已取消</div>
+                        <div class="summary-value">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">完成率</div>
+                        <div class="summary-value">-</div>
+                    </div>
+                </div>
+                <p style="text-align: center; color: #666; margin-top: 20px;">
+                    数据加载失败，请检查网络连接或稍后重试
+                </p>
+            </div>
+        `;
     }
 }
 
