@@ -45,7 +45,8 @@ class TherapistService {
                 'SELECT t.id, t.name, t.position, t.experience_years AS years_of_experience, t.specialties, t.honors, s.id AS store_id, s.name AS store_name, s.address AS store_address',
                 'SELECT COUNT(*) as count'
             );
-            const { count } = await db.get(countQuery, params);
+            const countResult = await db.get(countQuery, params);
+            const count = countResult && countResult.count !== undefined ? countResult.count : 0;
 
             // 添加分页
             const offset = (page - 1) * limit;
@@ -156,7 +157,8 @@ class TherapistService {
 
             // 获取总数
             const countQuery = `SELECT COUNT(*) as count FROM therapists t WHERE 1=1 ${storeId ? 'AND t.store_id = ?' : ''}`;
-            const { count } = await db.get(countQuery, storeId ? [storeId] : []);
+            const countResult = await db.get(countQuery, storeId ? [storeId] : []);
+            const count = countResult && countResult.count !== undefined ? countResult.count : 0;
 
             // 添加分页
             const offset = (page - 1) * limit;

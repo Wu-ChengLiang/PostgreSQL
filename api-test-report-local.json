@@ -4,110 +4,110 @@
     "passed": 17,
     "failed": 0,
     "successRate": "100.00%",
-    "timestamp": "2025-06-16T02:04:59.716Z",
+    "timestamp": "2025-06-16T04:19:49.620Z",
     "environment": "local"
   },
   "details": [
     {
       "name": "GET /client/stores - 获取所有门店",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.496Z",
+      "timestamp": "2025-06-16T04:19:49.402Z",
       "error": null
     },
     {
       "name": "GET /client/therapists/search - 搜索技师",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.502Z",
+      "timestamp": "2025-06-16T04:19:49.409Z",
       "error": null
     },
     {
       "name": "GET /client/therapists/:id/schedule - 获取技师排班",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.506Z",
+      "timestamp": "2025-06-16T04:19:49.412Z",
       "error": null
     },
     {
       "name": "POST /client/appointments - 创建预约",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.534Z",
+      "timestamp": "2025-06-16T04:19:49.437Z",
       "error": null
     },
     {
       "name": "GET /client/appointments - 查询用户预约",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.540Z",
+      "timestamp": "2025-06-16T04:19:49.443Z",
       "error": null
     },
     {
       "name": "PATCH /client/appointments/:id/cancel - 取消预约",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.554Z",
+      "timestamp": "2025-06-16T04:19:49.454Z",
       "error": null
     },
     {
       "name": "POST /admin/auth/login - 管理员登录",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.628Z",
+      "timestamp": "2025-06-16T04:19:49.530Z",
       "error": null
     },
     {
       "name": "GET /admin/therapists - 获取技师列表",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.637Z",
+      "timestamp": "2025-06-16T04:19:49.540Z",
       "error": null
     },
     {
       "name": "POST /admin/therapists - 创建技师",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.650Z",
+      "timestamp": "2025-06-16T04:19:49.555Z",
       "error": null
     },
     {
       "name": "GET /admin/therapists/:id - 获取技师详情",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.655Z",
+      "timestamp": "2025-06-16T04:19:49.559Z",
       "error": null
     },
     {
       "name": "PUT /admin/therapists/:id - 更新技师",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.669Z",
+      "timestamp": "2025-06-16T04:19:49.570Z",
       "error": null
     },
     {
       "name": "DELETE /admin/therapists/:id - 删除技师",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.678Z",
+      "timestamp": "2025-06-16T04:19:49.580Z",
       "error": null
     },
     {
       "name": "GET /admin/appointments - 获取预约列表",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.684Z",
+      "timestamp": "2025-06-16T04:19:49.588Z",
       "error": null
     },
     {
       "name": "GET /admin/stores - 获取门店列表",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.690Z",
+      "timestamp": "2025-06-16T04:19:49.593Z",
       "error": null
     },
     {
       "name": "POST /admin/stores - 创建门店",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.700Z",
+      "timestamp": "2025-06-16T04:19:49.604Z",
       "error": null
     },
     {
       "name": "PUT /admin/stores/:id - 更新门店",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.710Z",
+      "timestamp": "2025-06-16T04:19:49.615Z",
       "error": null
     },
     {
       "name": "GET /admin/statistics/overview - 获取统计概览",
       "status": "pass",
-      "timestamp": "2025-06-16T02:04:59.715Z",
+      "timestamp": "2025-06-16T04:19:49.619Z",
       "error": null
     }
   ]
