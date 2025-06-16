@@ -26,6 +26,71 @@ router.get('/therapists/search', async (req, res, next) => {
     }
 });
 
+// 新增：根据店名查询所有技师及预约时间
+router.get('/stores/:storeName/therapists-schedule', async (req, res, next) => {
+    try {
+        const { storeName } = req.params;
+        
+        // 解码URL中的中文店名
+        const decodedStoreName = decodeURIComponent(storeName);
+        
+        // 查找门店
+        const stores = await storeService.getAllStores();
+        const store = stores.stores.find(s => s.name === decodedStoreName);
+        
+        if (!store) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'STORE_NOT_FOUND',
+                    message: '未找到该门店'
+                }
+            });
+        }
+        
+        // 获取该门店的所有技师
+        const therapists = await therapistService.searchTherapists({
+            storeId: store.id,
+            page: 1,
+            limit: 100
+        });
+        
+        // 获取每个技师的预约信息
+        const therapistsWithSchedule = await Promise.all(
+            therapists.therapists.map(async (therapist) => {
+                // 获取该技师的所有预约
+                const appointments = await appointmentService.getTherapistAppointments(therapist.id);
+                
+                return {
+                    id: therapist.id,
+                    name: therapist.name,
+                    position: therapist.position,
+                    appointments: appointments.map(apt => ({
+                        date: apt.appointment_date,
+                        start_time: apt.start_time,
+                        end_time: apt.end_time,
+                        service: apt.service_name || '预约服务'
+                    }))
+                };
+            })
+        );
+        
+        res.json({
+            success: true,
+            data: {
+                store: {
+                    id: store.id,
+                    name: store.name,
+                    address: store.address
+                },
+                therapists: therapistsWithSchedule
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // 查询技师排班
 router.get('/therapists/:id/schedule', async (req, res, next) => {
     try {

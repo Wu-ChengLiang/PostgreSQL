@@ -2,6 +2,31 @@ const { getInstance } = require('../database/db');
 const { v4: uuidv4 } = require('uuid');
 
 class AppointmentService {
+    // 获取技师的所有预约
+    async getTherapistAppointments(therapistId) {
+        const db = getInstance();
+        await db.connect();
+
+        try {
+            const appointments = await db.all(
+                `SELECT 
+                    a.*,
+                    s.name as service_name
+                FROM appointments a
+                LEFT JOIN services s ON a.service_id = s.id
+                WHERE a.therapist_id = ?
+                  AND a.status IN ('pending', 'confirmed')
+                  AND a.appointment_date >= DATE('now')
+                ORDER BY a.appointment_date, a.start_time`,
+                [therapistId]
+            );
+
+            return appointments;
+        } finally {
+            await db.close();
+        }
+    }
+
     async createAppointment({ therapistId, userName, userPhone, appointmentDate, appointmentTime, notes }) {
         const db = getInstance();
         await db.connect();

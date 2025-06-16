@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>名医堂 - 专业中医按摩预约平台</title>
+    <title>名医堂 3.0 - 专业中医按摩预约平台</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/style-enhanced.css">
 </head>
 <body>
     <!-- 顶部导航 -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>名医堂</h1>
+                <h1>名医堂 3.0</h1>
                 <span class="tagline">专业中医按摩·推拿正骨·艾灸调理</span>
             </div>
             <div class="nav-links">
-                <a href="#stores">门店查询</a>
-                <a href="#therapists">技师团队</a>
-                <a href="#appointment">在线预约</a>
-                <a href="#my-appointments">我的预约</a>
+                <a href="#stores" onclick="showStores()">门店查询</a>
+                <a href="#therapists" onclick="showTherapists()">技师团队</a>
+                <a href="#appointment" onclick="showAppointment()">在线预约</a>
                 <a href="admin.html" class="admin-link">管理后台</a>
             </div>
         </div>
@@ -27,104 +25,95 @@
 
     <!-- 主要内容区 -->
     <main>
-        <!-- 搜索区域 -->
-        <section class="search-section">
+        <!-- 门店查询区域 -->
+        <section id="storesSection" class="content-section">
             <div class="container">
-                <h2>寻找适合您的调理师</h2>
+                <h2>门店查询</h2>
                 <div class="search-box">
-                    <select id="storeSelect" class="form-control">
-                        <option value="">选择门店</option>
+                    <select id="storeSelect" class="form-control" onchange="showStoreDetails()">
+                        <option value="">选择门店查看详情</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="showStoreTherapists()">查看该店技师</button>
+                </div>
+                <div id="storeDetails" class="store-details"></div>
+                <div id="storeTherapists" class="therapist-grid"></div>
+            </div>
+        </section>
+
+        <!-- 技师查询区域 -->
+        <section id="therapistsSection" class="content-section" style="display:none;">
+            <div class="container">
+                <h2>技师团队</h2>
+                <div class="search-box">
+                    <select id="therapistStoreFilter" class="form-control">
+                        <option value="">所有门店</option>
                     </select>
                     <input type="text" id="specialtyInput" class="form-control" placeholder="搜索专长（如：颈肩腰腿痛）">
-                    <select id="experienceSelect" class="form-control">
-                        <option value="">从业年限</option>
-                        <option value="5">5年以上</option>
-                        <option value="10">10年以上</option>
-                        <option value="15">15年以上</option>
-                        <option value="20">20年以上</option>
-                    </select>
                     <button class="btn btn-primary" onclick="searchTherapists()">搜索技师</button>
                 </div>
+                <div id="therapistList" class="therapist-grid"></div>
             </div>
         </section>
 
-        <!-- 技师列表 -->
-        <section class="therapists-section">
+        <!-- 预约区域 -->
+        <section id="appointmentSection" class="content-section" style="display:none;">
             <div class="container">
-                <h2 id="therapistTitle">推荐技师</h2>
-                <div id="therapistList" class="therapist-grid">
-                    <!-- 技师卡片将通过JavaScript动态生成 -->
-                </div>
-            </div>
-        </section>
-
-        <!-- 预约表单模态框 -->
-        <div id="appointmentModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>预约技师</h2>
-                <form id="appointmentForm">
+                <h2>在线预约</h2>
+                <div class="appointment-form">
                     <div class="form-group">
-                        <label>技师信息</label>
-                        <div id="selectedTherapist" class="therapist-info"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="userName">您的姓名 *</label>
-                        <input type="text" id="userName" required class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="userPhone">手机号码</label>
-                        <input type="tel" id="userPhone" class="form-control" pattern="1[3-9]\d{9}">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="appointmentDate">预约日期 *</label>
-                        <input type="date" id="appointmentDate" required class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="appointmentTime">预约时间 *</label>
-                        <select id="appointmentTime" required class="form-control">
-                            <option value="">请先选择日期</option>
+                        <label>选择门店</label>
+                        <select id="appointmentStore" class="form-control" onchange="loadStoreTherapists()">
+                            <option value="">请选择门店</option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
-                        <label for="notes">备注信息</label>
-                        <textarea id="notes" class="form-control" rows="3" placeholder="请描述您的症状或特殊需求"></textarea>
+                        <label>选择技师</label>
+                        <select id="appointmentTherapist" class="form-control">
+                            <option value="">请先选择门店</option>
+                        </select>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-block">确认预约</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- 我的预约查询 -->
-        <div id="myAppointmentsModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>查询我的预约</h2>
-                <div class="form-group">
-                    <label for="queryPhone">手机号码</label>
-                    <input type="tel" id="queryPhone" class="form-control" pattern="1[3-9]\d{9}" placeholder="请输入预约时的手机号">
-                    <button class="btn btn-primary" onclick="queryMyAppointments()">查询</button>
+                    <div class="form-group">
+                        <label>您的姓名</label>
+                        <input type="text" id="userName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>手机号码</label>
+                        <input type="tel" id="userPhone" class="form-control" pattern="1[3-9]\d{9}">
+                    </div>
+                    <div class="form-group">
+                        <label>预约日期</label>
+                        <input type="date" id="appointmentDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>预约时间</label>
+                        <select id="appointmentTime" class="form-control" required>
+                            <option value="">请选择时间</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                            <option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="submitAppointment()">提交预约</button>
                 </div>
-                <div id="appointmentsList"></div>
             </div>
-        </div>
+        </section>
     </main>
 
     <!-- 页脚 -->
     <footer>
         <div class="container">
-            <p>&copy; 2025 名医堂数据平台2.0 - 专业中医调理服务</p>
+            <p>&copy; 2025 名医堂数据平台 3.0 - 专业中医调理服务</p>
             <p>营业时间：9:00 - 21:00 | 客服电话：400-888-8888</p>
         </div>
     </footer>
 
-    <script src="js/utils.js"></script>
     <script src="js/client.js"></script>
 </body>
 </html>
