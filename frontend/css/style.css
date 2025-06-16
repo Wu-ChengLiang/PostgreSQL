@@ -8,8 +8,8 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
     line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #FAF0E6 0%, #F5DEB3 50%, #DEB887 100%);
+    color: #2c2c2c;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FEFCF3 40%, #F8F3E8 70%, #F0E6D2 100%);
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
@@ -23,11 +23,18 @@ body::before {
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(circle at 10% 20%, rgba(205, 133, 63, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 90% 80%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(244, 164, 96, 0.1) 0%, transparent 50%);
+        radial-gradient(circle at 15% 25%, rgba(218, 165, 32, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 85% 75%, rgba(184, 134, 11, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(205, 133, 63, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(160, 82, 45, 0.06) 0%, transparent 50%);
     pointer-events: none;
     z-index: -1;
+    animation: backgroundFloat 20s ease-in-out infinite;
+}
+
+@keyframes backgroundFloat {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
 }
 
 .container {
@@ -38,14 +45,20 @@ body::before {
 
 /* 导航栏 */
 .navbar {
-    background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
-    color: white;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8F3E8 30%, #B8860B 100%);
+    color: #2c2c2c;
     padding: 1rem 0;
-    box-shadow: 0 4px 20px rgba(139, 69, 19, 0.3);
+    box-shadow: 0 4px 25px rgba(184, 134, 11, 0.25);
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-bottom: 1px solid rgba(205, 133, 63, 0.3);
+    border-bottom: 3px solid rgba(184, 134, 11, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.navbar:hover {
+    box-shadow: 0 6px 30px rgba(184, 134, 11, 0.35);
 }
 
 .navbar .container {
@@ -57,18 +70,26 @@ body::before {
 .nav-brand h1 {
     font-size: 1.8rem;
     margin: 0;
-    background: linear-gradient(135deg, #F4A460 0%, #FAF0E6 100%);
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 50%, #CD853F 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 2px 4px rgba(184, 134, 11, 0.2);
+    transition: all 0.3s ease;
+    font-weight: 800;
+}
+
+.nav-brand h1:hover {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 4px 8px rgba(184, 134, 11, 0.4));
 }
 
 .tagline {
     font-size: 0.9rem;
-    opacity: 0.9;
-    color: #FAF0E6;
+    opacity: 0.85;
+    color: #e98e27;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    font-weight: 500;
 }
 
 .nav-links {
@@ -78,13 +99,14 @@ body::before {
 }
 
 .nav-links a {
-    color: #FAF0E6;
+    color: #4a4a4a;
     text-decoration: none;
     transition: all 0.3s ease;
     padding: 0.5rem 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     position: relative;
     overflow: hidden;
+    font-weight: 600;
 }
 
 .nav-links a::before {
@@ -94,8 +116,8 @@ body::before {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
+    background: linear-gradient(90deg, transparent, rgba(184, 134, 11, 0.2), transparent);
+    transition: left 0.6s ease;
 }
 
 .nav-links a:hover::before {
@@ -103,26 +125,50 @@ body::before {
 }
 
 .nav-links a:hover {
-    background: rgba(244, 164, 96, 0.2);
-    transform: translateY(-2px);
+    background: linear-gradient(135deg, rgba(218, 165, 32, 0.15) 0%, rgba(184, 134, 11, 0.15) 100%);
+    transform: translateY(-3px);
+    color: #8B6914;
+    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
 }
 
 .admin-link {
-    background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(210, 105, 30, 0.3);
-    font-weight: 500;
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+    color: white !important;
+    padding: 0.6rem 1.5rem;
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.4);
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-link::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.admin-link:hover::after {
+    width: 300px;
+    height: 300px;
 }
 
 .admin-link:hover {
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
-    box-shadow: 0 4px 15px rgba(210, 105, 30, 0.4);
+    background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+    box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5);
+    transform: translateY(-4px);
 }
 
 /* 内容区域 */
 .content-section {
-    padding: 2rem 0;
+    padding: 3rem 0;
     min-height: calc(100vh - 200px);
     position: relative;
     z-index: 1;
@@ -130,61 +176,109 @@ body::before {
 
 .content-section h2 {
     text-align: center;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    background: linear-gradient(135deg, #8B4513 0%, #CD853F 100%);
+    font-size: 2.2rem;
+    margin-bottom: 2.5rem;
+    background: linear-gradient(135deg, #8B6914 0%, #B8860B 50%, #DAA520 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(139, 69, 19, 0.1);
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(139, 105, 20, 0.2);
+    position: relative;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+.content-section h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+    border-radius: 2px;
 }
 
 /* 搜索框 */
 .search-box {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 235, 0.9) 100%);
-    padding: 2rem;
-    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 243, 232, 0.95) 100%);
+    padding: 2.5rem;
+    border-radius: 25px;
     box-shadow: 
-        0 10px 30px rgba(139, 69, 19, 0.15),
-        0 1px 0 rgba(255, 255, 255, 0.8) inset;
+        0 15px 35px rgba(184, 134, 11, 0.15),
+        0 5px 15px rgba(139, 105, 20, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
     display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
     flex-wrap: wrap;
-    border: 1px solid rgba(205, 133, 63, 0.2);
-    backdrop-filter: blur(10px);
+    border: 2px solid rgba(184, 134, 11, 0.2);
+    backdrop-filter: blur(15px);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInScale 0.8s ease-out;
+}
+
+.search-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(218, 165, 32, 0.08), transparent);
+    animation: searchBoxShine 4s ease-in-out infinite;
+}
+
+@keyframes searchBoxShine {
+    0%, 100% { left: -100%; }
+    50% { left: 100%; }
 }
 
 /* 表单控件 */
 .form-control {
     flex: 1;
-    padding: 0.8rem;
-    border: 2px solid rgba(205, 133, 63, 0.3);
-    border-radius: 8px;
+    padding: 1rem;
+    border: 2px solid rgba(184, 134, 11, 0.3);
+    border-radius: 12px;
     font-size: 1rem;
     min-width: 200px;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 235, 0.9) 100%);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 252, 243, 0.9) 100%);
     transition: all 0.3s ease;
+    position: relative;
+    color: #2c2c2c;
+    font-weight: 500;
 }
 
 .form-control:focus {
     outline: none;
-    border-color: #CD853F;
-    box-shadow: 0 0 0 3px rgba(205, 133, 63, 0.1);
+    border-color: #B8860B;
+    box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.15), 0 4px 15px rgba(184, 134, 11, 0.25);
+    transform: translateY(-2px);
+}
+
+.form-control:hover {
+    border-color: #8B6914;
+    box-shadow: 0 2px 10px rgba(139, 105, 20, 0.15);
 }
 
 /* 按钮 */
 .btn {
-    padding: 0.8rem 2rem;
+    padding: 1rem 2.5rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 .btn::before {
@@ -194,10 +288,10 @@ body::before {
     left: 50%;
     width: 0;
     height: 0;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease;
+    transition: width 0.4s ease, height 0.4s ease;
 }
 
 .btn:hover::before {
@@ -206,15 +300,20 @@ body::before {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+    box-shadow: 0 6px 20px rgba(184, 134, 11, 0.35);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+    background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(184, 134, 11, 0.45);
+}
+
+.btn-primary:active {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(205, 133, 63, 0.4);
+    box-shadow: 0 4px 15px rgba(184, 134, 11, 0.6);
 }
 
 .btn-block {
@@ -223,47 +322,61 @@ body::before {
 
 /* 门店详情 */
 .store-details {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 235, 0.9) 100%);
-    padding: 2rem;
-    border-radius: 20px;
-    margin-bottom: 2rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 243, 232, 0.95) 100%);
+    padding: 2.5rem;
+    border-radius: 25px;
+    margin-bottom: 3rem;
     box-shadow: 
-        0 10px 30px rgba(139, 69, 19, 0.15),
-        0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    border: 1px solid rgba(205, 133, 63, 0.2);
-    backdrop-filter: blur(10px);
+        0 15px 35px rgba(184, 134, 11, 0.15),
+        0 5px 15px rgba(139, 105, 20, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(184, 134, 11, 0.2);
+    backdrop-filter: blur(15px);
+    transition: all 0.3s ease;
+    animation: slideInUp 0.7s ease-out;
+}
+
+.store-details:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 20px 40px rgba(184, 134, 11, 0.2),
+        0 8px 25px rgba(139, 105, 20, 0.15);
 }
 
 .store-details h3 {
-    color: #8B4513;
-    margin-bottom: 1rem;
-    font-weight: 600;
+    color: #8B6914;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+    font-size: 1.4rem;
 }
 
 .store-details p {
-    color: #A0522D;
-    line-height: 1.6;
+    color: #4a4a4a;
+    line-height: 1.8;
+    font-weight: 500;
 }
 
 /* 技师网格 */
 .therapist-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
 }
 
 .therapist-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 235, 0.9) 100%);
-    padding: 1.5rem;
-    border-radius: 15px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 243, 232, 0.95) 100%);
+    padding: 2rem;
+    border-radius: 20px;
     box-shadow: 
-        0 8px 25px rgba(139, 69, 19, 0.1),
-        0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    transition: all 0.3s ease;
-    border: 1px solid rgba(205, 133, 63, 0.2);
-    backdrop-filter: blur(10px);
+        0 10px 30px rgba(184, 134, 11, 0.15),
+        0 4px 15px rgba(139, 105, 20, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.4s ease;
+    border: 2px solid rgba(184, 134, 11, 0.2);
+    backdrop-filter: blur(15px);
     position: relative;
     overflow: hidden;
+    animation: slideInUp 0.6s ease-out;
 }
 
 .therapist-card::before {
@@ -272,126 +385,175 @@ body::before {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+    height: 4px;
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.therapist-card:hover::before {
+    transform: scaleX(1);
 }
 
 .therapist-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(139, 69, 19, 0.2);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 20px 40px rgba(184, 134, 11, 0.25),
+        0 10px 25px rgba(139, 105, 20, 0.18);
+    border-color: rgba(184, 134, 11, 0.4);
 }
 
 .therapist-header {
     display: flex;
     justify-content: space-between;
     align-items: start;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .therapist-name {
-    font-size: 1.2rem;
-    font-weight: bold;
-    background: linear-gradient(135deg, #8B4513 0%, #CD853F 100%);
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #8B6914 0%, #B8860B 50%, #DAA520 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .therapist-position {
-    color: #A0522D;
-    font-weight: 500;
+    color: #5a5a5a;
+    font-weight: 600;
+    margin-top: 0.3rem;
 }
 
 .therapist-experience {
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
     color: white;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    border-radius: 25px;
     font-size: 0.9rem;
-    box-shadow: 0 2px 8px rgba(205, 133, 63, 0.3);
-    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.4);
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.therapist-experience:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(184, 134, 11, 0.5);
 }
 
 .therapist-store {
-    color: #8B4513;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+    color: #8B6914;
+    margin-bottom: 1rem;
+    font-weight: 700;
 }
 
 .therapist-specialties {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.8rem;
     flex-wrap: wrap;
-    margin: 1rem 0;
+    margin: 1.5rem 0;
 }
 
 .specialty-tag {
-    background: linear-gradient(135deg, rgba(244, 164, 96, 0.3) 0%, rgba(255, 255, 255, 0.3) 100%);
-    color: #8B4513;
-    padding: 0.2rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    border: 1px solid rgba(205, 133, 63, 0.3);
-    font-weight: 500;
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.12) 0%, rgba(248, 243, 232, 0.9) 100%);
+    color: #8B6914;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    border: 2px solid rgba(184, 134, 11, 0.25);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.specialty-tag:hover {
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.2) 0%, rgba(248, 243, 232, 0.95) 100%);
+    border-color: rgba(139, 105, 20, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 134, 11, 0.25);
+    color: #704f0a;
 }
 
 .appointment-button {
-    background: linear-gradient(135deg, #9ACD32 0%, #8FBC8F 100%);
+    background: linear-gradient(135deg, #228B22 0%, #32CD32 100%);
     color: white;
     border: none;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1rem;
     transition: all 0.3s ease;
     width: 100%;
-    margin-top: 1rem;
-    font-weight: 500;
-    box-shadow: 0 2px 8px rgba(154, 205, 50, 0.3);
+    margin-top: 1.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(34, 139, 34, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.appointment-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.appointment-button:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .appointment-button:hover {
-    background: linear-gradient(135deg, #8FBC8F 0%, #9ACD32 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(154, 205, 50, 0.4);
+    background: linear-gradient(135deg, #32CD32 0%, #228B22 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(34, 139, 34, 0.45);
 }
 
 /* 预约表单 */
 .appointment-form {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 245, 235, 0.9) 100%);
-    padding: 2rem;
-    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 243, 232, 0.95) 100%);
+    padding: 2.5rem;
+    border-radius: 25px;
     box-shadow: 
-        0 10px 30px rgba(139, 69, 19, 0.15),
-        0 1px 0 rgba(255, 255, 255, 0.8) inset;
-    border: 1px solid rgba(205, 133, 63, 0.2);
-    backdrop-filter: blur(10px);
+        0 15px 35px rgba(184, 134, 11, 0.15),
+        0 5px 15px rgba(139, 105, 20, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(184, 134, 11, 0.2);
+    backdrop-filter: blur(15px);
 }
 
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: #8B4513;
-    font-weight: 500;
+    margin-bottom: 0.8rem;
+    color: #8B6914;
+    font-weight: 700;
+    font-size: 1.1rem;
 }
 
 /* 页脚 */
 footer {
-    background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
-    color: white;
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8F3E8 30%, #B8860B 100%);
+    color: #4a4a4a;
     text-align: center;
-    padding: 2rem 0;
-    margin-top: 3rem;
-    box-shadow: 0 -4px 20px rgba(139, 69, 19, 0.2);
+    padding: 3rem 0;
+    margin-top: 4rem;
+    box-shadow: 0 -6px 25px rgba(184, 134, 11, 0.2);
+    border-top: 3px solid rgba(184, 134, 11, 0.2);
 }
 
 footer p {
     margin: 0;
     opacity: 0.9;
+    font-weight: 600;
 }
 
 /* 响应式设计 */
@@ -403,6 +565,7 @@ footer p {
 
     .search-box {
         flex-direction: column;
+        padding: 2rem;
     }
 
     .form-control {
@@ -411,58 +574,67 @@ footer p {
 
     .therapist-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 
     .container {
-        padding: 0 10px;
+        padding: 0 15px;
     }
 
     .content-section {
-        padding: 1rem 0;
+        padding: 2rem 0;
     }
 
     .therapist-header {
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.8rem;
         align-items: start;
+    }
+
+    .content-section h2 {
+        font-size: 1.8rem;
     }
 }
 
 /* 加载动画 */
 .loading {
     text-align: center;
-    padding: 2rem;
-    color: #8B4513;
-    font-weight: 500;
+    padding: 3rem;
+    color: #8B6914;
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
 /* 消息提示 */
 .message {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
     text-align: center;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
+    font-weight: 700;
+    backdrop-filter: blur(15px);
+    border: 2px solid transparent;
 }
 
 .message.success {
-    background: linear-gradient(135deg, rgba(154, 205, 50, 0.9) 0%, rgba(143, 188, 143, 0.9) 100%);
+    background: linear-gradient(135deg, rgba(34, 139, 34, 0.9) 0%, rgba(50, 205, 50, 0.9) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(154, 205, 50, 0.3);
+    box-shadow: 0 6px 20px rgba(34, 139, 34, 0.35);
+    border-color: rgba(34, 139, 34, 0.4);
 }
 
 .message.error {
-    background: linear-gradient(135deg, rgba(205, 133, 63, 0.9) 0%, rgba(210, 105, 30, 0.9) 100%);
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.9) 0%, rgba(218, 165, 32, 0.9) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+    box-shadow: 0 6px 20px rgba(184, 134, 11, 0.35);
+    border-color: rgba(184, 134, 11, 0.4);
 }
 
-/* 动画效果 */
-@keyframes slideIn {
+/* 增强动画效果 */
+@keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
@@ -470,28 +642,127 @@ footer p {
     }
 }
 
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 .therapist-card {
-    animation: slideIn 0.5s ease-out;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.search-box {
+    animation: fadeInScale 0.8s ease-out;
+}
+
+.store-details {
+    animation: slideInUp 0.7s ease-out;
 }
 
 .therapist-card:hover .specialty-tag {
-    background: linear-gradient(135deg, rgba(205, 133, 63, 0.3) 0%, rgba(244, 164, 96, 0.3) 100%);
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.3) 0%, rgba(248, 243, 232, 0.95) 100%);
+    border-color: rgba(139, 105, 20, 0.6);
 }
 
 /* 滚动条美化 */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 12px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(250, 240, 230, 0.5);
+    background: rgba(248, 243, 232, 0.7);
+    border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
-    border-radius: 4px;
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+    border-radius: 6px;
+    transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%);
+    background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.4);
+}
+
+/* 新增互动元素 */
+.floating-elements {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.floating-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(184, 134, 11, 0.06);
+    animation: float 6s ease-in-out infinite;
+}
+
+.floating-circle:nth-child(1) {
+    width: 80px;
+    height: 80px;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.floating-circle:nth-child(2) {
+    width: 120px;
+    height: 120px;
+    top: 60%;
+    right: 10%;
+    animation-delay: 2s;
+}
+
+.floating-circle:nth-child(3) {
+    width: 60px;
+    height: 60px;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.4;
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+        opacity: 0.7;
+    }
+}
+
+/* 鼠标悬停光效 */
+.glow-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.glow-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(184, 134, 11, 0.12) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.glow-effect:hover::after {
+    opacity: 1;
 }
