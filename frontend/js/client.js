@@ -123,7 +123,7 @@ async function searchTherapists() {
         }
     } catch (error) {
         console.error('搜索技师失败:', error);
-        alert('搜索失败，请稍后重试');
+        showMessage('搜索失败，请稍后重试', 'error');
     }
 }
 
@@ -269,7 +269,7 @@ async function handleAppointmentSubmit(e) {
     // 验证手机号格式
     const phoneRegex = /^1[3-9]\d{9}$/;
     if (!phoneRegex.test(formData.user_phone)) {
-        alert('请输入正确的手机号码');
+        showMessage('请输入正确的手机号码', 'error');
         return;
     }
     
@@ -285,16 +285,16 @@ async function handleAppointmentSubmit(e) {
         const data = await response.json();
         
         if (data.success) {
-            alert(`预约成功！\n预约编号：${data.data.confirmation_code || '已生成'}\n请记住您的手机号以便查询预约`);
+            showMessage(`预约成功！预约编号：${data.data.confirmation_code || '已生成'}`);
             document.getElementById('appointmentModal').style.display = 'none';
             // 重新加载技师列表以更新可用时间
             loadRecommendedTherapists();
         } else {
-            alert(data.error.message || '预约失败，请稍后重试');
+            showMessage(data.error.message || '预约失败，请稍后重试', 'error');
         }
     } catch (error) {
         console.error('预约失败:', error);
-        alert('预约失败，请稍后重试');
+        showMessage('预约失败，请稍后重试', 'error');
     }
 }
 
@@ -302,14 +302,14 @@ async function handleAppointmentSubmit(e) {
 async function queryMyAppointments() {
     const phone = document.getElementById('queryPhone').value;
     if (!phone) {
-        alert('请输入手机号');
+        showMessage('请输入手机号', 'error');
         return;
     }
     
     // 验证手机号格式
     const phoneRegex = /^1[3-9]\d{9}$/;
     if (!phoneRegex.test(phone)) {
-        alert('请输入正确的手机号码');
+        showMessage('请输入正确的手机号码', 'error');
         return;
     }
     
@@ -320,11 +320,11 @@ async function queryMyAppointments() {
         if (data.success) {
             displayAppointments(data.data.appointments);
         } else {
-            alert(data.error.message || '查询失败');
+            showMessage(data.error.message || '查询失败', 'error');
         }
     } catch (error) {
         console.error('查询预约失败:', error);
-        alert('查询失败，请稍后重试');
+        showMessage('查询失败，请稍后重试', 'error');
     }
 }
 
@@ -387,13 +387,13 @@ async function cancelAppointment(appointmentId) {
         const data = await response.json();
         
         if (data.success) {
-            alert('预约已取消');
+            showMessage('预约已取消', 'success');
             queryMyAppointments(); // 重新加载预约列表
         } else {
-            alert(data.error.message || '取消失败');
+            showMessage(data.error.message || '取消失败', 'error');
         }
     } catch (error) {
         console.error('取消预约失败:', error);
-        alert('取消失败，请稍后重试');
+        showMessage('取消失败，请稍后重试', 'error');
     }
 }

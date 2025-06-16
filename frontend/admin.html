@@ -6,6 +6,7 @@
     <title>名医堂管理后台</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/style-enhanced.css">
 </head>
 <body>
     <!-- 登录页面 -->
@@ -217,6 +218,62 @@
         </div>
     </div>
 
+    <!-- 编辑技师模态框 -->
+    <div id="editTherapistModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditTherapistModal()">&times;</span>
+            <h2>编辑技师</h2>
+            <form id="editTherapistForm">
+                <input type="hidden" id="editTherapistId">
+                <div class="form-group">
+                    <label for="editTherapistStore">所属门店 *</label>
+                    <select id="editTherapistStore" class="form-control" required>
+                        <option value="">请选择门店</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistName">姓名 *</label>
+                    <input type="text" id="editTherapistName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistPosition">职位 *</label>
+                    <select id="editTherapistPosition" class="form-control" required>
+                        <option value="调理师">调理师</option>
+                        <option value="推拿师">推拿师</option>
+                        <option value="艾灸师">艾灸师</option>
+                        <option value="专家医师">专家医师</option>
+                        <option value="健康管理师">健康管理师</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistExperience">从业年限 *</label>
+                    <input type="number" id="editTherapistExperience" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistSpecialties">专长 * (多个用逗号分隔)</label>
+                    <input type="text" id="editTherapistSpecialties" class="form-control" placeholder="如：按摩，经络疏通，艾灸" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistPhone">联系电话</label>
+                    <input type="tel" id="editTherapistPhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistHonors">荣誉称号</label>
+                    <input type="text" id="editTherapistHonors" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editTherapistStatus">状态</label>
+                    <select id="editTherapistStatus" class="form-control">
+                        <option value="active">在职</option>
+                        <option value="inactive">离职</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">更新</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

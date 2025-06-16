@@ -1,0 +1,284 @@
+/* 增强版样式 - 在原有样式基础上添加 */
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 渐变背景 */
+.navbar {
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.search-section {
+    background: linear-gradient(to bottom, #ffffff 0%, #f9f9f9 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.search-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(139, 69, 19, 0.05) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 卡片效果增强 */
+.therapist-card {
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
+    background: linear-gradient(to bottom right, #ffffff 0%, #fafafa 100%);
+}
+
+.therapist-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8B4513 0%, #D2691E 100%);
+}
+
+/* 按钮效果增强 */
+.btn {
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+.book-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 专长标签美化 */
+.specialty-tag {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 1px solid #a5d6a7;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.specialty-tag:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+/* 搜索框美化 */
+.form-control {
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s;
+    background-color: #fafafa;
+}
+
+.form-control:focus {
+    border-color: #8B4513;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+}
+
+/* 模态框动画 */
+.modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 状态标签美化 */
+.appointment-status {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 预约项目卡片美化 */
+.appointment-item {
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.appointment-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 技师经验标签 */
+.therapist-experience {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: #e65100;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* 响应式导航改进 */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0.5rem 0;
+    }
+    
+    .nav-brand h1 {
+        font-size: 1.5rem;
+    }
+    
+    .tagline {
+        font-size: 0.8rem;
+    }
+    
+    .nav-links {
+        background: rgba(0,0,0,0.1);
+        padding: 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+    
+    .nav-links a {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+/* 加载动画 */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #8B4513;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #8B4513;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #A0522D;
+}
+
+/* 提示信息样式 */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 成功消息提示 */
+.success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+    z-index: 1000;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

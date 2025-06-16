@@ -6,13 +6,18 @@ async function seedData() {
 
     console.log('🌱 开始导入种子数据...');
 
-    // 清空现有数据
+    // 禁用外键约束以清空数据
+    await db.run('PRAGMA foreign_keys = OFF');
+    
+    // 清空现有数据（按照依赖顺序）
     await db.run('DELETE FROM appointments');
-    await db.run('DELETE FROM therapist_services');
     await db.run('DELETE FROM therapists');
+    await db.run('DELETE FROM users');
     await db.run('DELETE FROM services');
     await db.run('DELETE FROM stores');
-    await db.run('DELETE FROM users');
+    
+    // 重新启用外键约束
+    await db.run('PRAGMA foreign_keys = ON');
 
     // 插入服务项目
     const services = [
@@ -106,23 +111,23 @@ async function seedData() {
 
     for (const therapist of therapists) {
         await db.run(
-            'INSERT INTO therapists (store_id, name, position, experience_years, specialties, honors) VALUES (?, ?, ?, ?, ?, ?)',
-            [therapist.store_id, therapist.name, therapist.position, therapist.experience_years, therapist.specialties, therapist.honors || null]
+            'INSERT INTO therapists (store_id, name, position, experience_years, specialties, service_types, honors) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [therapist.store_id, therapist.name, therapist.position, therapist.experience_years, therapist.specialties, therapist.specialties, therapist.honors || null]
         );
     }
 
     // 插入示例用户
     const users = [
-        { name: '张三', phone: '13800138000', gender: 'male', age: 35 },
-        { name: '李四', phone: '13900139000', gender: 'female', age: 28 },
-        { name: '王五', phone: '13700137000', gender: 'male', age: 42 },
-        { name: '赵六', phone: '13600136000', gender: 'female', age: 30 }
+        { name: '张三', username: 'zhangsan', email: 'zhangsan@example.com', phone: '13800138000', gender: 'male', age: 35 },
+        { name: '李四', username: 'lisi', email: 'lisi@example.com', phone: '13900139000', gender: 'female', age: 28 },
+        { name: '王五', username: 'wangwu', email: 'wangwu@example.com', phone: '13700137000', gender: 'male', age: 42 },
+        { name: '赵六', username: 'zhaoliu', email: 'zhaoliu@example.com', phone: '13600136000', gender: 'female', age: 30 }
     ];
 
     for (const user of users) {
         await db.run(
-            'INSERT INTO users (name, phone, gender, age) VALUES (?, ?, ?, ?)',
-            [user.name, user.phone, user.gender, user.age]
+            'INSERT INTO users (name, username, email, phone, gender, age) VALUES (?, ?, ?, ?, ?, ?)',
+            [user.name, user.username, user.email, user.phone, user.gender, user.age]
         );
     }
 
@@ -135,4 +140,3 @@ if (require.main === module) {
 }
 
 module.exports = seedData;
-EOF < /dev/null

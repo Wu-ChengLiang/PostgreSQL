@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 设置添加技师表单事件
     document.getElementById('addTherapistForm').onsubmit = handleAddTherapist;
+    
+    // 设置编辑技师表单事件
+    document.getElementById('editTherapistForm').onsubmit = handleEditTherapist;
 });
 
 // 显示登录页面
@@ -63,11 +66,11 @@ async function handleLogin(e) {
             document.getElementById('adminInfo').textContent = `欢迎，${currentAdmin.username}`;
             showAdminPage();
         } else {
-            alert(data.error.message || '登录失败');
+            showMessage(data.error.message || '登录失败', 'error');
         }
     } catch (error) {
         console.error('登录失败:', error);
-        alert('登录失败，请检查网络连接');
+        showMessage('登录失败，请检查网络连接', 'error');
     }
 }
 
@@ -259,15 +262,104 @@ async function handleAddTherapist(e) {
         });
         
         if (data.success) {
-            alert('技师添加成功');
+            showMessage('技师添加成功', 'success');
             closeAddTherapistModal();
             loadTherapists();
         } else {
-            alert(data.error.message || '添加失败');
+            showMessage(data.error.message || '添加失败', 'error');
         }
     } catch (error) {
         console.error('添加技师失败:', error);
-        alert('添加失败，请稍后重试');
+        showMessage('添加失败，请稍后重试', 'error');
+    }
+}
+
+// 编辑技师
+async function editTherapist(id) {
+    try {
+        // 获取技师详情
+        const data = await apiRequest(`${API_BASE_URL}/therapists/${id}`);
+        
+        if (data.success) {
+            const therapist = data.data;
+            
+            // 填充表单
+            document.getElementById('editTherapistId').value = therapist.id;
+            document.getElementById('editTherapistStore').value = therapist.store_id;
+            document.getElementById('editTherapistName').value = therapist.name;
+            document.getElementById('editTherapistPosition').value = therapist.position;
+            document.getElementById('editTherapistExperience').value = therapist.experience_years || therapist.years_of_experience;
+            document.getElementById('editTherapistSpecialties').value = therapist.specialties.join('，');
+            document.getElementById('editTherapistPhone').value = therapist.phone || '';
+            document.getElementById('editTherapistHonors').value = therapist.honors || '';
+            document.getElementById('editTherapistStatus').value = therapist.status;
+            
+            // 加载门店列表到编辑表单
+            const storeSelect = document.getElementById('editTherapistStore');
+            const stores = await apiRequest(`${API_BASE_URL}/stores`);
+            if (stores.success) {
+                storeSelect.innerHTML = '<option value="">请选择门店</option>';
+                stores.data.stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store.id;
+                    option.textContent = store.name;
+                    if (store.id === therapist.store_id) {
+                        option.selected = true;
+                    }
+                    storeSelect.appendChild(option);
+                });
+            }
+            
+            // 显示模态框
+            document.getElementById('editTherapistModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('获取技师详情失败:', error);
+        showMessage('获取技师信息失败，请稍后重试', 'error');
+    }
+}
+
+// 关闭编辑技师模态框
+function closeEditTherapistModal() {
+    document.getElementById('editTherapistModal').style.display = 'none';
+    document.getElementById('editTherapistForm').reset();
+}
+
+// 处理编辑技师
+async function handleEditTherapist(e) {
+    e.preventDefault();
+    
+    const therapistId = document.getElementById('editTherapistId').value;
+    const formData = {
+        store_id: parseInt(document.getElementById('editTherapistStore').value),
+        name: document.getElementById('editTherapistName').value,
+        position: document.getElementById('editTherapistPosition').value,
+        years_of_experience: parseInt(document.getElementById('editTherapistExperience').value),
+        specialties: document.getElementById('editTherapistSpecialties').value.split(/[,，]/).map(s => s.trim()),
+        phone: document.getElementById('editTherapistPhone').value,
+        honors: document.getElementById('editTherapistHonors').value,
+        status: document.getElementById('editTherapistStatus').value
+    };
+    
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/therapists/${therapistId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (data.success) {
+            showMessage('技师信息更新成功', 'success');
+            closeEditTherapistModal();
+            loadTherapists();
+        } else {
+            showMessage(data.error.message || '更新失败', 'error');
+        }
+    } catch (error) {
+        console.error('更新技师失败:', error);
+        showMessage('更新失败，请稍后重试', 'error');
     }
 }
 
@@ -283,14 +375,14 @@ async function deleteTherapist(id) {
         });
         
         if (data.success) {
-            alert('技师已删除');
+            showMessage('技师已删除', 'success');
             loadTherapists();
         } else {
-            alert(data.error.message || '删除失败');
+            showMessage(data.error.message || '删除失败', 'error');
         }
     } catch (error) {
         console.error('删除技师失败:', error);
-        alert('删除失败，请稍后重试');
+        showMessage('删除失败，请稍后重试', 'error');
     }
 }
 
@@ -358,14 +450,14 @@ async function updateAppointmentStatus(id, status) {
         });
         
         if (data.success) {
-            alert('状态更新成功');
+            showMessage('状态更新成功', 'success');
             loadAppointments();
         } else {
-            alert(data.error.message || '更新失败');
+            showMessage(data.error.message || '更新失败', 'error');
         }
     } catch (error) {
         console.error('更新预约状态失败:', error);
-        alert('更新失败，请稍后重试');
+        showMessage('更新失败，请稍后重试', 'error');
     }
 }
 
@@ -413,7 +505,7 @@ async function loadStatistics() {
     const endDate = document.getElementById('statsEndDate').value;
     
     if (!startDate || !endDate) {
-        alert('请选择日期范围');
+        showMessage('请选择日期范围', 'error');
         return;
     }
     
@@ -484,7 +576,7 @@ async function loadStatistics() {
         `;
     } catch (error) {
         console.error('加载统计数据失败:', error);
-        alert('加载统计数据失败');
+        showMessage('加载统计数据失败', 'error');
     }
 }
 

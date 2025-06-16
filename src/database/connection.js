@@ -13,7 +13,7 @@ class Database {
         try {
             // 确保数据库目录存在
             const dbDir = path.dirname(this.dbPath);
-            if (\!fs.existsSync(dbDir)) {
+            if (!fs.existsSync(dbDir)) {
                 fs.mkdirSync(dbDir, { recursive: true });
             }
 
@@ -101,4 +101,3 @@ class Database {
 }
 
 module.exports = Database;
-EOF < /dev/null
