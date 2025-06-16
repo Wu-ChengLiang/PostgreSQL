@@ -91,7 +91,22 @@ router.post('/therapists', async (req, res, next) => {
 
         res.json({
             success: true,
-            data: { therapist }
+            data: therapist
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 获取技师详情
+router.get('/therapists/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const therapist = await therapistService.getTherapistById(id);
+        
+        res.json({
+            success: true,
+            data: therapist
         });
     } catch (error) {
         next(error);
@@ -108,7 +123,7 @@ router.put('/therapists/:id', async (req, res, next) => {
 
         res.json({
             success: true,
-            data: { therapist }
+            data: therapist
         });
     } catch (error) {
         next(error);
@@ -255,6 +270,94 @@ router.get('/statistics/therapists', async (req, res, next) => {
             success: true,
             data: { statistics }
         });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 创建门店
+router.post('/stores', async (req, res, next) => {
+    try {
+        const store = await storeService.createStore(req.body);
+        
+        res.status(201).json({
+            success: true,
+            data: store
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 更新门店
+router.put('/stores/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const store = await storeService.updateStore(id, req.body);
+        
+        res.json({
+            success: true,
+            data: store
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 获取门店详情
+router.get('/stores/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await storeService.getStoreDetail(id);
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 获取统计概览
+router.get('/statistics/overview', async (req, res, next) => {
+    try {
+        const db = require('../database/db').getInstance();
+        await db.connect();
+        
+        try {
+            // 获取各项统计数据
+            const [storesCount, therapistsCount, appointmentsCount, usersCount] = await Promise.all([
+                db.get('SELECT COUNT(*) as count FROM stores WHERE status = "active"'),
+                db.get('SELECT COUNT(*) as count FROM therapists WHERE status = "active"'),
+                db.get('SELECT COUNT(*) as count FROM appointments'),
+                db.get('SELECT COUNT(*) as count FROM users')
+            ]);
+            
+            const todayAppointments = await db.get(
+                'SELECT COUNT(*) as count FROM appointments WHERE appointment_date = DATE("now")'
+            );
+            
+            const monthRevenue = await db.get(
+                `SELECT SUM(price) as revenue FROM appointments 
+                 WHERE status = "completed" 
+                 AND appointment_date >= DATE("now", "start of month")`
+            );
+            
+            res.json({
+                success: true,
+                data: {
+                    stores_count: storesCount.count,
+                    therapists_count: therapistsCount.count,
+                    appointments_count: appointmentsCount.count,
+                    users_count: usersCount.count,
+                    today_appointments: todayAppointments.count,
+                    month_revenue: monthRevenue.revenue || 0
+                }
+            });
+        } finally {
+            // Don't close the connection with persistent pool
+        }
     } catch (error) {
         next(error);
     }

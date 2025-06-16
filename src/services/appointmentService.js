@@ -25,7 +25,7 @@ class AppointmentService {
                 `SELECT * FROM appointments 
                  WHERE therapist_id = ? 
                    AND appointment_date = ? 
-                   AND appointment_time = ?
+                   AND start_time = ?
                    AND status IN ('pending', 'confirmed')`,
                 [therapistId, appointmentDate, appointmentTime]
             );

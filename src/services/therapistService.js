@@ -101,7 +101,7 @@ class TherapistService {
 
             // 获取该日期已预约的时间段
             const appointments = await db.all(
-                `SELECT appointment_time 
+                `SELECT start_time 
                  FROM appointments 
                  WHERE therapist_id = ? 
                    AND appointment_date = ? 
@@ -109,7 +109,7 @@ class TherapistService {
                 [therapistId, date]
             );
 
-            const bookedTimes = appointments.map(a => a.appointment_time);
+            const bookedTimes = appointments.map(a => a.start_time);
 
             // 生成可用时间段（9:00 - 21:00，每小时一个时段）
             const allTimes = [];
