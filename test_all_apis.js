@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // 配置基础URL - 根据实际运行端口调整
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3001';
 const API_BASE = `${BASE_URL}/api/v1`;
 
 // 测试结果存储
@@ -113,7 +113,11 @@ async function testStoreApis() {
         logTest('获取门店详情(客户端)', result);
         
         // 更新门店
-        const updateData = { description: '更新后的门店描述' };
+        const updateData = { 
+            business_hours: '9:00-22:00',
+            manager_name: '测试店长',
+            status: 'active'
+        };
         result = await makeRequest('PUT', `/admin/stores/${testStoreId}`, updateData, headers);
         logTest('更新门店信息', result);
     }
@@ -164,7 +168,11 @@ async function testTherapistApis() {
         logTest('获取技师详情', result);
         
         // 更新技师信息
-        const updateData = { description: '更新后的技师描述' };
+        const updateData = { 
+            name: '测试技师（已更新）',
+            phone: '13900139001',
+            honors: '测试荣誉'
+        };
         result = await makeRequest('PUT', `/admin/therapists/${testTherapistId}`, updateData, headers);
         logTest('更新技师信息', result);
         
@@ -246,10 +254,19 @@ async function testStoreTherapistSchedule() {
     let result = await makeRequest('GET', `/client/stores/${storeName}/therapists-schedule`);
     logTest('获取门店技师排班(中文店名)', result);
     
-    // 如果有测试门店，也可以用ID测试
+    // 如果有测试门店，也可以用ID测试，但先检查门店是否存在
     if (testStoreId) {
-        result = await makeRequest('GET', `/client/stores/${testStoreId}/therapists-schedule`);
-        logTest('获取门店技师排班(门店ID)', result);
+        // 先检查门店是否存在
+        const storeCheck = await makeRequest('GET', `/client/stores/${testStoreId}`);
+        if (storeCheck.success) {
+            result = await makeRequest('GET', `/client/stores/${testStoreId}/therapists-schedule`);
+            logTest('获取门店技师排班(门店ID)', result);
+        } else {
+            logTest('获取门店技师排班(门店ID)', { 
+                success: false, 
+                error: `测试门店ID ${testStoreId} 不存在，跳过测试` 
+            });
+        }
     }
 }
 
@@ -290,11 +307,17 @@ async function testErrorHandling() {
     
     // 无效的技师ID
     let result = await makeRequest('GET', '/admin/therapists/99999', null, headers);
-    logTest('无效技师ID(应该返回404)', { success: result.status === 404 });
+    logTest('无效技师ID(应该返回404)', { 
+        success: result.status === 404,
+        error: result.status !== 404 ? `期望404，实际${result.status}` : null
+    });
     
     // 无效的预约ID
     result = await makeRequest('GET', '/admin/appointments/99999', null, headers);
-    logTest('无效预约ID(应该返回404)', { success: result.status === 404 });
+    logTest('无效预约ID(应该返回404)', { 
+        success: result.status === 404,
+        error: result.status !== 404 ? `期望404，实际${result.status}` : null
+    });
     
     // 缺少必填参数的预约创建
     result = await makeRequest('POST', '/client/appointments', {
@@ -315,7 +338,7 @@ async function testErrorHandling() {
 async function runAllTests() {
     console.log('🚀 开始执行API综合测试\n');
     console.log(`📡 测试服务器: ${BASE_URL}`);
-    console.log('=' * 50);
+    console.log('='.repeat(50));
     
     try {
         // 按顺序执行测试
@@ -334,9 +357,9 @@ async function runAllTests() {
     }
     
     // 输出测试总结
-    console.log('\n' + '=' * 50);
+    console.log('\n' + '='.repeat(50));
     console.log('📋 测试总结');
-    console.log('=' * 50);
+    console.log('='.repeat(50));
     console.log(`✅ 通过: ${testResults.passed}`);
     console.log(`❌ 失败: ${testResults.failed}`);
     console.log(`📊 总计: ${testResults.passed + testResults.failed}`);

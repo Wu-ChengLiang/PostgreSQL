@@ -100,11 +100,13 @@ app.use((req, res) => {
 const startServer = async () => {
   await initializeDatabase();
   
-  app.listen(PORT, () => {
+  app.listen(PORT, '127.0.0.1', () => {
     console.log(`🚀 API服务器运行在端口 ${PORT}`);
-    console.log(`📄 API文档: http://localhost:${PORT}/api/health`);
+    console.log(`📄 API文档: http://127.0.0.1:${PORT}/api/health`);
     console.log(`🗄️  数据库类型: SQLite`);
     console.log(`📁 数据库路径: ${process.env.SQLITE_DB_PATH || './data.db'}`);
+    console.log(`🌐 网络接口: IPv4 (127.0.0.1)`);
+    console.log(`🔧 解决了IPv6兼容性问题`);
   });
 };
 

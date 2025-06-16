@@ -129,9 +129,17 @@ app.use((err, req, res, next) => {
 });
 
 // 启动服务器
-app.listen(PORT, () => {
+const HOST = process.env.HOST || '127.0.0.1'; // 本地开发用127.0.0.1，生产环境用0.0.0.0
+app.listen(PORT, HOST, () => {
     console.log(`🚀 名医堂数据平台3.0 已启动`);
-    console.log(`📍 服务器地址: http://localhost:${PORT}`);
-    console.log(`📚 API文档: http://localhost:${PORT}/api-docs`);
-    console.log(`🏥 健康检查: http://localhost:${PORT}/health`);
+    console.log(`📍 服务器地址: http://${HOST}:${PORT}`);
+    console.log(`📚 API文档: http://${HOST}:${PORT}/api-docs`);
+    console.log(`🏥 健康检查: http://${HOST}:${PORT}/health`);
+    console.log(`🌐 网络接口: ${HOST === '0.0.0.0' ? 'All interfaces (云服务器模式)' : 'IPv4 (本地开发模式)'}`);
+    
+    if (process.env.NODE_ENV === 'production') {
+        console.log(`🌍 公网访问: http://emagen.323424.xyz:${PORT}`);
+        console.log(`🔒 内网地址: http://10.7.4.15:${PORT}`);
+        console.log(`🌐 公网IP: 43.167.226.222:${PORT}`);
+    }
 });

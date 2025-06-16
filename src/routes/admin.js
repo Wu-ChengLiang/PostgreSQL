@@ -109,6 +109,15 @@ router.get('/therapists/:id', async (req, res, next) => {
             data: therapist
         });
     } catch (error) {
+        if (error.message === '技师不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '技师不存在'
+                }
+            });
+        }
         next(error);
     }
 });
@@ -175,6 +184,7 @@ router.get('/appointments', async (req, res, next) => {
 router.get('/appointments/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
+        console.log(`🔍 查询预约详情: ID=${id}`);
         
         const appointment = await appointmentService.getAppointmentDetail(id);
 
@@ -183,6 +193,25 @@ router.get('/appointments/:id', async (req, res, next) => {
             data: { appointment }
         });
     } catch (error) {
+        console.log(`❌ 预约详情查询错误: ${error.message}`);
+        console.log(`🔍 错误消息包含"不存在": ${error.message.includes('不存在')}`);
+        
+        if (error.message === '预约不存在' || 
+            error.message.includes('不存在') || 
+            error.message.includes('not found') ||
+            error.message.includes('Not found')) {
+            console.log('✅ 匹配404条件，返回404状态码');
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '预约不存在'
+                }
+            });
+        }
+        console.log('❌ 未匹配404条件，传递给错误处理中间件');
+        // 设置错误状态码，然后传递给错误处理中间件
+        error.status = error.status || 500;
         next(error);
     }
 });

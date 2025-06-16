@@ -43,6 +43,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`API Server running on port ${PORT}`);
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`🚀 API服务器已启动在端口 ${PORT}`);
+  console.log(`📍 服务器地址: http://127.0.0.1:${PORT}`);
+  console.log(`🌐 网络接口: IPv4 (127.0.0.1)`);
+  console.log(`🔧 解决了IPv6兼容性问题`);
 });
