@@ -272,7 +272,8 @@ class AppointmentService {
                 'SELECT a.*, u.name AS user_name, u.phone AS user_phone, t.name AS therapist_name, t.position AS therapist_position, s.name AS store_name',
                 'SELECT COUNT(*) as count'
             );
-            const { count } = await db.get(countQuery, params);
+            const countResult = await db.get(countQuery, params);
+            const count = countResult ? countResult.count : 0;
 
             // 添加排序和分页
             const offset = (page - 1) * limit;
