@@ -294,8 +294,15 @@ async function submitAppointment() {
     const appointmentDate = document.getElementById('appointmentDate').value;
     const appointmentTime = document.getElementById('appointmentTime').value;
     
-    if (!therapistId || !userName || !appointmentDate || !appointmentTime) {
-        showMessage('请填写所有必填项', 'error');
+    if (!therapistId || !userName || !userPhone || !appointmentDate || !appointmentTime) {
+        showMessage('请填写所有必填项（包括手机号）', 'error');
+        return;
+    }
+    
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(userPhone)) {
+        showMessage('请输入有效的手机号码', 'error');
         return;
     }
     
@@ -306,11 +313,11 @@ async function submitAppointment() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                therapist_id: therapistId,
+                therapist_id: parseInt(therapistId),
                 user_name: userName,
                 user_phone: userPhone,
                 appointment_date: appointmentDate,
-                start_time: appointmentTime,
+                appointment_time: appointmentTime,
                 notes: ''
             })
         });
