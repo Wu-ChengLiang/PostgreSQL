@@ -6,6 +6,7 @@ AI客户端模块 - 统一多模型AI调用接口
 from .client import AIClient
 from .models import AIModel, AIResponse
 from .config import AIConfig, AIProvider
+from . import database_service
 
 __version__ = "1.0.0"
-__all__ = ["AIClient", "AIModel", "AIResponse", "AIConfig", "AIProvider"] 
+__all__ = ["AIClient", "AIModel", "AIResponse", "AIConfig", "AIProvider", "database_service"] 

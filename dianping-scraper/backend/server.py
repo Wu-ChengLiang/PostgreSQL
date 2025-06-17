@@ -122,6 +122,8 @@ class DianpingWebSocketServer:
             return await self.handle_chat_context_switch(data, timestamp)
         elif msg_type == "memory_update":
             return await self.handle_memory_update(data, timestamp)
+        elif msg_type == "memory_save" or msg_type == "memoory_save":  # 处理拼写错误的情况
+            return await self.handle_memory_save(data, timestamp)
         else:
             logger.warning(f"⚠️ 未知消息类型: {msg_type}")
             return {"type": "error", "message": f"未知的消息类型: {msg_type}"}
@@ -178,7 +180,7 @@ class DianpingWebSocketServer:
 
         if not new_messages:
             logger.info(f"[记忆处理] {contact_name}: 无新消息")
-            return { "type": "memory_ack", "message": "无新消息" }
+            return { "type": "memory_updated", "new_messages_count": len(new_messages) }
 
         logger.info(f"[记忆处理] {contact_name}: 检测到 {len(new_messages)} 条新消息，将存入数据库")
         for msg in new_messages:
@@ -227,6 +229,41 @@ class DianpingWebSocketServer:
             logger.error(f"[AI触发] 调用AI时发生错误 for {contact_name}: {e}", exc_info=True)
 
         return { "type": "memory_updated_and_ai_triggered", "new_messages_count": len(new_messages) }
+
+    async def handle_memory_save(self, data: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
+        """
+        处理记忆保存请求 - 用于手动保存当前对话记忆
+        """
+        payload = data.get("payload", {})
+        chat_id = self._safe_get_value(payload.get("chatId"), "default_chat")
+        contact_name = self._safe_get_value(payload.get("contactName"), "未知用户")
+        conversation_memory = payload.get("conversationMemory", [])
+        
+        if not conversation_memory:
+            logger.info(f"[记忆保存] {contact_name}: 空记忆，无需保存")
+            return { "type": "memory_save_ack", "message": "空记忆，无需保存" }
+        
+        logger.info(f"[记忆保存] {contact_name} ({chat_id}): 保存 {len(conversation_memory)} 条记忆")
+        
+        # 保存所有记忆到数据库（不重复保存已存在的消息）
+        saved_count = 0
+        for message in conversation_memory:
+            message['chatId'] = message.get('chatId', chat_id)
+            message['contactName'] = message.get('contactName', contact_name)
+            
+            message_id = db_manager._generate_message_id(message)
+            
+            if not db_manager.is_message_processed(message_id):
+                db_manager.add_message(message)
+                saved_count += 1
+        
+        logger.info(f"[记忆保存] {contact_name}: 成功保存 {saved_count} 条新记忆")
+        return { 
+            "type": "memory_save_complete", 
+            "message": f"记忆保存完成，共保存 {saved_count} 条新记忆",
+            "saved_count": saved_count,
+            "total_count": len(conversation_memory)
+        }
 
     async def handle_client(self, websocket):
         """主循环，处理单个客户端的所有通信"""
