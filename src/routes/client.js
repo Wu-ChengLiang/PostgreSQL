@@ -159,6 +159,101 @@ router.post('/appointments', async (req, res, next) => {
     }
 });
 
+// 智能预约 - 简化版本，只需要最少的信息
+router.post('/appointments/smart', async (req, res, next) => {
+    try {
+        const { 
+            therapist_name,
+            appointment_time,
+            customer_name,
+            store_name,
+            appointment_date,
+            notes 
+        } = req.body;
+
+        console.log('🤖 智能预约请求:', req.body);
+
+        // 只验证最基本的参数
+        if (!therapist_name && !appointment_time) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '至少需要技师姓名或预约时间'
+                }
+            });
+        }
+
+        // 自动填充默认值
+        const finalCustomerName = customer_name || `客户_${Date.now()}`;
+        const finalAppointmentDate = appointment_date || new Date().toISOString().split('T')[0];
+        const finalAppointmentTime = appointment_time || '14:00';
+        const finalTherapistName = therapist_name || '默认技师';
+
+        // 查找技师（简化逻辑）
+        const therapists = await therapistService.searchTherapists({
+            page: 1,
+            limit: 100
+        });
+
+        let matchedTherapist = null;
+        if (therapists.therapists && therapists.therapists.length > 0) {
+            // 如果有技师姓名，尝试匹配
+            if (therapist_name) {
+                matchedTherapist = therapists.therapists.find(t => 
+                    t.name.includes(therapist_name.replace('老师', '').replace('师傅', ''))
+                );
+            }
+            // 如果没找到，使用第一个技师
+            if (!matchedTherapist) {
+                matchedTherapist = therapists.therapists[0];
+            }
+        }
+
+        if (!matchedTherapist) {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'THERAPIST_NOT_FOUND',
+                    message: '未找到可用的技师'
+                }
+            });
+        }
+
+        console.log('📋 使用技师:', matchedTherapist.name, '(ID:', matchedTherapist.id, ')');
+
+        // 创建预约
+        const result = await appointmentService.createAppointment({
+            therapistId: matchedTherapist.id,
+            userName: finalCustomerName,
+            userPhone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`, // 生成假电话
+            appointmentDate: finalAppointmentDate,
+            appointmentTime: finalAppointmentTime,
+            notes: notes || `智能预约: ${therapist_name || ''} ${appointment_time || ''}`
+        });
+
+        console.log('✅ 预约创建成功:', result);
+
+        res.json({
+            success: true,
+            data: {
+                ...result,
+                matched_therapist: matchedTherapist,
+                original_request: {
+                    therapist_name,
+                    appointment_time,
+                    customer_name,
+                    store_name
+                }
+            },
+            message: `智能预约成功！技师: ${matchedTherapist.name}, 时间: ${finalAppointmentTime}, 客户: ${finalCustomerName}`
+        });
+    } catch (error) {
+        console.error('❌ 智能预约失败:', error);
+        next(error);
+    }
+});
+
 // 查看用户预约
 router.get('/appointments/user', async (req, res, next) => {
     try {

@@ -247,6 +247,74 @@ class BaseAdapter(ABC):
             }
         ]
     
+    def get_smart_appointment_tools(self) -> List[Dict[str, Any]]:
+        """获取智能预约工具配置"""
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "create_smart_appointment",
+                    "description": "智能预约功能：支持两种模式：1)自然语言模式-根据客户消息和上下文自动解析创建预约；2)结构化数据模式-直接使用解析好的预约信息创建预约。优先推荐使用结构化数据模式，更快更准确。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "therapist_name": {
+                                "type": "string",
+                                "description": "技师姓名，例如：'马老师'、'李老师'、'张师傅'等"
+                            },
+                            "appointment_time": {
+                                "type": "string",
+                                "description": "预约时间，格式：HH:MM，例如：'16:30'、'14:00'"
+                            },
+                            "customer_name": {
+                                "type": "string",
+                                "description": "客户姓名，例如：'联系人_1750127546284'"
+                            },
+                            "store_name": {
+                                "type": "string",
+                                "description": "门店名称，例如：'名医堂·颈肩腰腿特色调理（静安寺店）'"
+                            },
+                            "appointment_date": {
+                                "type": "string",
+                                "description": "预约日期，格式：YYYY-MM-DD，如不提供则默认今天"
+                            },
+                            "notes": {
+                                "type": "string",
+                                "description": "备注信息，可选"
+                            },
+                            "customer_message": {
+                                "type": "string",
+                                "description": "【自然语言模式】客户的原始预约请求，当没有提供结构化数据时使用"
+                            },
+                            "context_info": {
+                                "type": "object",
+                                "description": "【自然语言模式】对话上下文信息，当没有提供结构化数据时使用",
+                                "properties": {
+                                    "shopName": {
+                                        "type": "string",
+                                        "description": "门店名称"
+                                    },
+                                    "contactName": {
+                                        "type": "string",
+                                        "description": "联系人名称"
+                                    },
+                                    "combinedName": {
+                                        "type": "string",
+                                        "description": "组合名称"
+                                    },
+                                    "chatId": {
+                                        "type": "string",
+                                        "description": "聊天会话ID"
+                                    }
+                                }
+                            }
+                        },
+                        "required": []
+                    }
+                }
+            }
+        ]
+    
     async def _make_request(self, url: str, headers: dict, data: dict) -> dict:
         """发送HTTP请求"""
         import aiohttp
@@ -378,12 +446,18 @@ class BaseAdapter(ABC):
 - get_appointment_details: 查询预约详情
 - get_stores: 获取门店信息
 - send_appointment_emails: 发送预约邮件通知（客户确认+技师通知）
+- create_smart_appointment: 智能预约（推荐）- 当客户提出预约需求时，优先使用此功能
 
-【预约流程优化】：
-1. 当客户表达预约意向时，收集必要信息：客户姓名、预约技师、预约时间、门店信息
-2. 收集完整信息后，向客户确认：「您的预约信息：姓名[X]，技师[X]，时间[X]，门店[X]。确认预约吗？」
-3. 客户确认后，立即执行：先调用create_appointment创建预约，成功后立即调用send_appointment_emails给对应手机号发送邮件
-4. 避免重复确认，一次确认即完成所有操作
+【智能预约流程】：
+1. 当客户表达预约意向时，优先使用create_smart_appointment功能
+2. 此功能会自动：
+   - 解析客户的自然语言预约请求（技师姓名、时间等）
+   - 结合对话上下文信息（门店、联系人信息）
+   - 查找匹配的技师并检查可用性
+   - 自动创建预约记录
+   - 发送确认邮件给客户和技师
+3. 如果智能预约失败，再使用传统的create_appointment流程
+4. 避免重复确认，一次操作完成所有步骤
 
 
 工作原则：
@@ -437,7 +511,7 @@ class BaseAdapter(ABC):
         # 如果适配器支持function calling，添加工具
         tools = None
         if self.supports_function_calling:
-            tools = self.get_database_tools() + self.get_email_notification_tools()
+            tools = self.get_database_tools() + self.get_email_notification_tools() + self.get_smart_appointment_tools()
         
         return AIRequest(
             messages=messages,

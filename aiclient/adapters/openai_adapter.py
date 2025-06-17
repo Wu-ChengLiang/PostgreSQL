@@ -191,6 +191,32 @@ class OpenAIAdapter(BaseAdapter):
                 result = await email_service.send_appointment_notification_emails(function_args)
                 return result
             
+            elif function_name == "create_smart_appointment":
+                # 方式1: 直接调用智能预约API (推荐)
+                customer_message = function_args.get("customer_message", "")
+                context_info = function_args.get("context_info", {})
+                
+                # 如果提供了解析好的数据，直接使用智能预约API
+                if "therapist_name" in function_args or "appointment_time" in function_args:
+                    self.logger.info("使用直接智能预约API模式")
+                    result = await db_service.create_smart_appointment(function_args)
+                    return result
+                
+                # 方式2: 使用智能预约服务进行自然语言解析
+                else:
+                    self.logger.info("使用智能预约服务解析模式")
+                    from ..services.smart_appointment import SmartAppointmentService
+                    
+                    smart_appointment_service = SmartAppointmentService(
+                        database_service=db_service
+                    )
+                    
+                    result = await smart_appointment_service.create_smart_appointment(
+                        customer_message=customer_message,
+                        context_info=context_info
+                    )
+                    return result
+            
             else:
                 return {
                     "success": False,

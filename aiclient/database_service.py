@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DatabaseAPIService:
     """数据库API服务类 - 为AI功能调用提供数据接口"""
     
-    def __init__(self, base_url: str = "http://emagen.323424.xyz"):
+    def __init__(self, base_url: str = "http://localhost:3001"):
         """
         初始化数据库API服务
         
@@ -95,6 +95,91 @@ class DatabaseAPIService:
         self.logger.info(f"查询到 {len(technicians)} 个技师")
         return technicians
     
+    async def search_therapists(self, store_name: Optional[str] = None,
+                              therapist_name: Optional[str] = None,
+                              store_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        搜索技师信息（新版本接口）
+        
+        Args:
+            store_name: 门店名称 (可选)
+            therapist_name: 技师姓名 (可选)
+            store_id: 门店ID (可选)
+            
+        Returns:
+            技师列表
+        """
+        # 如果有门店名称，先查找门店ID
+        if store_name and not store_id:
+            stores = await self.get_stores()
+            matching_stores = [s for s in stores if store_name in s.get('name', '')]
+            if matching_stores:
+                store_id = matching_stores[0]['id']
+        
+        params = {}
+        if store_id:
+            params['store_id'] = store_id
+        if therapist_name:
+            params['name'] = therapist_name
+            
+        self.logger.info(f"搜索技师: {params}")
+        therapists = await self._make_request("/api/client/therapists/search", params)
+        self.logger.info(f"查询到 {len(therapists)} 个技师")
+        return therapists
+    
+    async def get_therapist_schedule(self, therapist_id: int, date: str) -> Dict[str, Any]:
+        """
+        获取技师排班信息
+        
+        Args:
+            therapist_id: 技师ID
+            date: 查询日期，格式: YYYY-MM-DD
+            
+        Returns:
+            排班信息
+        """
+        params = {'date': date}
+        
+        self.logger.info(f"查询技师排班: therapist_id={therapist_id}, date={date}")
+        schedule = await self._make_request(f"/api/client/therapists/{therapist_id}/schedule", params)
+        
+        # 如果返回的是字典格式，提取schedule字段
+        if isinstance(schedule, dict) and 'schedule' in schedule:
+            schedule_data = schedule['schedule']
+        elif isinstance(schedule, list):
+            schedule_data = schedule
+        else:
+            schedule_data = schedule
+        
+        self.logger.info(f"获取到技师排班信息")
+        return {
+            "therapist_id": therapist_id,
+            "date": date,
+            "schedule": schedule_data,
+            "available_times": self._extract_available_times(schedule_data),
+            "booked_times": self._extract_booked_times(schedule_data)
+        }
+    
+    def _extract_available_times(self, schedule_data) -> List[str]:
+        """从排班数据中提取可用时间"""
+        if isinstance(schedule_data, dict):
+            return schedule_data.get('available_times', [])
+        
+        # 默认营业时间9:00-21:00
+        default_times = []
+        for hour in range(9, 21):
+            default_times.append(f"{hour:02d}:00")
+            default_times.append(f"{hour:02d}:30")
+        
+        return default_times
+    
+    def _extract_booked_times(self, schedule_data) -> List[str]:
+        """从排班数据中提取已预约时间"""
+        if isinstance(schedule_data, dict):
+            return schedule_data.get('booked_times', [])
+        
+        return []
+    
     async def query_technician_schedule(self, technician_id: int, 
                                        start_date: str, end_date: str) -> List[Dict[str, Any]]:
         """
@@ -155,19 +240,50 @@ class DatabaseAPIService:
             创建结果
         """
         await self._ensure_session()
-        url = f"{self.base_url}/api/appointments"
+        url = f"{self.base_url}/api/v1/client/appointments"
         
         try:
             async with self.session.post(url, json=appointment_data) as response:
                 result = await response.json()
-                if response.status == 201:
-                    self.logger.info(f"预约创建成功: {result.get('id', 'N/A')}")
-                    return {"success": True, "data": result}
+                if response.status == 200 and result.get('success'):
+                    self.logger.info(f"预约创建成功: {result.get('data', {}).get('appointment_id', 'N/A')}")
+                    return {"success": True, "data": result.get('data', {})}
                 else:
                     self.logger.error(f"预约创建失败: {result}")
-                    return {"success": False, "error": result.get("message", "未知错误")}
+                    return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
         except Exception as e:
             self.logger.error(f"预约创建异常: {e}")
+            return {"success": False, "error": str(e)}
+    
+    async def create_smart_appointment(self, smart_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        创建智能预约记录 - 直接调用智能预约API
+        
+        Args:
+            smart_data: 智能预约数据 (therapist_name, appointment_time等)
+            
+        Returns:
+            创建结果
+        """
+        await self._ensure_session()
+        url = f"{self.base_url}/api/v1/client/appointments/smart"
+        
+        try:
+            self.logger.info(f"发送智能预约请求: {smart_data}")
+            async with self.session.post(url, json=smart_data) as response:
+                result = await response.json()
+                if response.status == 200 and result.get('success'):
+                    self.logger.info(f"智能预约创建成功: {result.get('data', {}).get('appointment_id', 'N/A')}")
+                    return {
+                        "success": True, 
+                        "data": result.get('data', {}),
+                        "message": result.get('message', '智能预约创建成功')
+                    }
+                else:
+                    self.logger.error(f"智能预约创建失败: {result}")
+                    return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
+        except Exception as e:
+            self.logger.error(f"智能预约创建异常: {e}")
             return {"success": False, "error": str(e)}
     
     async def close(self):
