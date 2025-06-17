@@ -22,6 +22,7 @@ class DatabaseAPIService:
             base_url: API服务器基础URL
         """
         self.base_url = base_url.rstrip('/')
+        self.api_base = f"{self.base_url}/api/v1"  # 使用v1版本API
         self.session = None
         self.logger = logger.getChild(self.__class__.__name__)
     
@@ -44,14 +45,20 @@ class DatabaseAPIService:
             API响应数据
         """
         await self._ensure_session()
-        url = f"{self.base_url}{endpoint}"
+        url = f"{self.api_base}{endpoint}"
         
         try:
             async with self.session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if isinstance(data, dict) and 'data' in data:
-                        return data['data']
+                    # 处理新API结构的响应
+                    if isinstance(data, dict):
+                        if 'success' in data and data['success'] and 'data' in data:
+                            # 新API格式：{"success": true, "data": {...}}
+                            return data['data']
+                        elif 'data' in data:
+                            # 旧API格式兼容
+                            return data['data']
                     return data if isinstance(data, list) else []
                 else:
                     self.logger.error(f"API请求失败: {url}, 状态码: {response.status}")
@@ -59,6 +66,32 @@ class DatabaseAPIService:
         except Exception as e:
             self.logger.error(f"API请求异常: {url}, 错误: {e}")
             return []
+    
+    async def _make_post_request(self, endpoint: str, data: Dict) -> Dict[str, Any]:
+        """
+        发送POST请求到API服务器
+        
+        Args:
+            endpoint: API端点
+            data: 请求数据
+            
+        Returns:
+            API响应数据
+        """
+        await self._ensure_session()
+        url = f"{self.api_base}{endpoint}"
+        
+        try:
+            async with self.session.post(url, json=data) as response:
+                result = await response.json()
+                if response.status == 200:
+                    return result
+                else:
+                    self.logger.error(f"POST请求失败: {url}, 状态码: {response.status}, 响应: {result}")
+                    return {"success": False, "error": result}
+        except Exception as e:
+            self.logger.error(f"POST请求异常: {url}, 错误: {e}")
+            return {"success": False, "error": str(e)}
     
     async def get_stores(self) -> List[Dict[str, Any]]:
         """
@@ -68,7 +101,16 @@ class DatabaseAPIService:
             门店列表
         """
         self.logger.info("查询门店列表")
-        stores = await self._make_request("/api/stores")
+        stores_data = await self._make_request("/client/stores")
+        
+        # 处理新API结构
+        if isinstance(stores_data, dict) and 'stores' in stores_data:
+            stores = stores_data['stores']
+        elif isinstance(stores_data, list):
+            stores = stores_data
+        else:
+            stores = []
+            
         self.logger.info(f"查询到 {len(stores)} 个门店")
         return stores
     
@@ -91,9 +133,21 @@ class DatabaseAPIService:
             params['name'] = name
             
         self.logger.info(f"搜索技师: {params}")
-        technicians = await self._make_request("/api/therapists", params)
-        self.logger.info(f"查询到 {len(technicians)} 个技师")
-        return technicians
+        therapists_data = await self._make_request("/client/therapists/search", params)
+        
+        # 处理新API结构 - 调试输出
+        self.logger.info(f"原始响应数据: {therapists_data}")
+        
+        # 处理新API结构
+        if isinstance(therapists_data, dict) and 'therapists' in therapists_data:
+            therapists = therapists_data['therapists']
+        elif isinstance(therapists_data, list):
+            therapists = therapists_data
+        else:
+            therapists = []
+            
+        self.logger.info(f"查询到 {len(therapists)} 个技师")
+        return therapists
     
     async def search_therapists(self, store_name: Optional[str] = None,
                               therapist_name: Optional[str] = None,
@@ -123,7 +177,7 @@ class DatabaseAPIService:
             params['name'] = therapist_name
             
         self.logger.info(f"搜索技师: {params}")
-        therapists = await self._make_request("/api/client/therapists/search", params)
+        therapists = await self._make_request("/client/therapists/search", params)
         self.logger.info(f"查询到 {len(therapists)} 个技师")
         return therapists
     
@@ -141,7 +195,7 @@ class DatabaseAPIService:
         params = {'date': date}
         
         self.logger.info(f"查询技师排班: therapist_id={therapist_id}, date={date}")
-        schedule = await self._make_request(f"/api/client/therapists/{therapist_id}/schedule", params)
+        schedule = await self._make_request(f"/client/therapists/{therapist_id}/schedule", params)
         
         # 如果返回的是字典格式，提取schedule字段
         if isinstance(schedule, dict) and 'schedule' in schedule:
@@ -193,16 +247,19 @@ class DatabaseAPIService:
         Returns:
             排班信息列表
         """
-        params = {
-            'technician_id': technician_id,
-            'start_date': start_date,
-            'end_date': end_date
-        }
+        # 使用新的技师排班API
+        schedule_list = []
+        current_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
         
-        self.logger.info(f"查询技师排班: {params}")
-        schedule = await self._make_request("/api/schedules", params)
-        self.logger.info(f"查询到 {len(schedule)} 条排班记录")
-        return schedule
+        while current_date <= end_date_obj:
+            date_str = current_date.strftime('%Y-%m-%d')
+            schedule = await self.get_therapist_schedule(technician_id, date_str)
+            schedule_list.append(schedule)
+            current_date += timedelta(days=1)
+        
+        self.logger.info(f"查询到 {len(schedule_list)} 条排班记录")
+        return schedule_list
     
     async def query_available_appointments(self, date: str, 
                                          store_id: Optional[int] = None,
@@ -218,16 +275,27 @@ class DatabaseAPIService:
         Returns:
             可用时间段列表
         """
-        params = {'date': date}
-        if store_id:
-            params['store_id'] = store_id
+        # 如果有技师ID，直接查询技师排班
         if technician_id:
-            params['technician_id'] = technician_id
-            
-        self.logger.info(f"查询可用预约时间: {params}")
-        appointments = await self._make_request("/api/appointments/available", params)
-        self.logger.info(f"查询到 {len(appointments)} 个可用时间段")
-        return appointments
+            schedule = await self.get_therapist_schedule(technician_id, date)
+            return schedule.get('available_times', [])
+        
+        # 否则查询门店的所有技师
+        if store_id:
+            therapists = await self.search_therapists(store_id=store_id)
+            available_slots = []
+            for therapist in therapists:
+                schedule = await self.get_therapist_schedule(therapist['id'], date)
+                for time_slot in schedule.get('available_times', []):
+                    available_slots.append({
+                        'therapist_id': therapist['id'],
+                        'therapist_name': therapist['name'],
+                        'time': time_slot,
+                        'date': date
+                    })
+            return available_slots
+        
+        return []
     
     async def create_appointment(self, appointment_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -239,21 +307,15 @@ class DatabaseAPIService:
         Returns:
             创建结果
         """
-        await self._ensure_session()
-        url = f"{self.base_url}/api/v1/client/appointments"
+        self.logger.info(f"创建预约: {appointment_data}")
+        result = await self._make_post_request("/client/appointments", appointment_data)
         
-        try:
-            async with self.session.post(url, json=appointment_data) as response:
-                result = await response.json()
-                if response.status == 200 and result.get('success'):
-                    self.logger.info(f"预约创建成功: {result.get('data', {}).get('appointment_id', 'N/A')}")
-                    return {"success": True, "data": result.get('data', {})}
-                else:
-                    self.logger.error(f"预约创建失败: {result}")
-                    return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
-        except Exception as e:
-            self.logger.error(f"预约创建异常: {e}")
-            return {"success": False, "error": str(e)}
+        if result.get('success'):
+            self.logger.info(f"预约创建成功: {result.get('data', {}).get('id', 'N/A')}")
+            return {"success": True, "data": result.get('data', {})}
+        else:
+            self.logger.error(f"预约创建失败: {result}")
+            return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
     
     async def create_smart_appointment(self, smart_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -265,25 +327,98 @@ class DatabaseAPIService:
         Returns:
             创建结果
         """
+        self.logger.info(f"发送智能预约请求: {smart_data}")
+        result = await self._make_post_request("/client/appointments/smart", smart_data)
+        
+        if result.get('success'):
+            self.logger.info(f"智能预约创建成功: {result.get('data', {}).get('id', 'N/A')}")
+            return {
+                "success": True, 
+                "data": result.get('data', {}),
+                "message": result.get('message', '智能预约创建成功')
+            }
+        else:
+            self.logger.error(f"智能预约创建失败: {result}")
+            return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
+    
+    async def get_user_appointments(self, phone: str) -> List[Dict[str, Any]]:
+        """
+        获取用户预约列表
+        
+        Args:
+            phone: 用户电话号码
+            
+        Returns:
+            预约列表
+        """
+        params = {'phone': phone}
+        self.logger.info(f"查询用户预约: {phone}")
+        appointments_data = await self._make_request("/client/appointments/user", params)
+        
+        # 处理新API结构
+        if isinstance(appointments_data, dict) and 'appointments' in appointments_data:
+            appointments = appointments_data['appointments']
+        elif isinstance(appointments_data, list):
+            appointments = appointments_data
+        else:
+            appointments = []
+            
+        self.logger.info(f"查询到 {len(appointments)} 个预约记录")
+        return appointments
+    
+    async def get_appointment_details(self, appointment_id: int) -> Dict[str, Any]:
+        """
+        获取预约详情
+        
+        Args:
+            appointment_id: 预约ID
+            
+        Returns:
+            预约详情
+        """
         await self._ensure_session()
-        url = f"{self.base_url}/api/v1/client/appointments/smart"
+        url = f"{self.api_base}/admin/appointments/{appointment_id}"
         
         try:
-            self.logger.info(f"发送智能预约请求: {smart_data}")
-            async with self.session.post(url, json=smart_data) as response:
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    result = await response.json()
+                    if result.get('success') and result.get('data'):
+                        return result['data']
+                    return result
+                else:
+                    self.logger.error(f"获取预约详情失败: {appointment_id}")
+                    return {}
+        except Exception as e:
+            self.logger.error(f"获取预约详情异常: {e}")
+            return {}
+    
+    async def cancel_appointment(self, appointment_id: int, phone: str) -> Dict[str, Any]:
+        """
+        取消预约
+        
+        Args:
+            appointment_id: 预约ID
+            phone: 用户电话（用于验证）
+            
+        Returns:
+            取消结果
+        """
+        await self._ensure_session()
+        url = f"{self.api_base}/client/appointments/{appointment_id}"
+        data = {"phone": phone}
+        
+        try:
+            async with self.session.delete(url, json=data) as response:
                 result = await response.json()
                 if response.status == 200 and result.get('success'):
-                    self.logger.info(f"智能预约创建成功: {result.get('data', {}).get('appointment_id', 'N/A')}")
-                    return {
-                        "success": True, 
-                        "data": result.get('data', {}),
-                        "message": result.get('message', '智能预约创建成功')
-                    }
+                    self.logger.info(f"预约取消成功: {appointment_id}")
+                    return {"success": True, "data": result.get('data', {})}
                 else:
-                    self.logger.error(f"智能预约创建失败: {result}")
-                    return {"success": False, "error": result.get("error", {}).get("message", "未知错误")}
+                    self.logger.error(f"预约取消失败: {result}")
+                    return {"success": False, "error": result.get("error", {}).get("message", "取消失败")}
         except Exception as e:
-            self.logger.error(f"智能预约创建异常: {e}")
+            self.logger.error(f"预约取消异常: {e}")
             return {"success": False, "error": str(e)}
     
     async def close(self):
@@ -326,6 +461,6 @@ async def query_available_appointments(date: str, store_id: Optional[int] = None
 async def create_appointment(appointment_data: Dict[str, Any]):
     """创建预约记录"""
     service = get_database_service()
-    return await service.create_appointment(appointment_data) 
+    return await service.create_appointment(appointment_data)
 
 

@@ -90,24 +90,22 @@ class OpenAIAdapter(BaseAdapter):
         try:
             # 新API函数调用
             if function_name == "create_appointment":
-                username = function_args.get("username")
-                customer_name = function_args.get("customer_name")
-                customer_phone = function_args.get("customer_phone")
-                therapist_id = function_args.get("therapist_id")
-                appointment_date = function_args.get("appointment_date")
-                appointment_time = function_args.get("appointment_time")
-                service_type = function_args.get("service_type")
-                notes = function_args.get("notes")
+                # 处理标准预约创建
+                appointment_data = {
+                    'therapist_id': function_args.get('therapist_id'),
+                    'user_name': function_args.get('user_name'),
+                    'user_phone': function_args.get('user_phone'),
+                    'appointment_date': function_args.get('appointment_date'),
+                    'appointment_time': function_args.get('appointment_time'),
+                    'notes': function_args.get('notes', '')
+                }
                 
-                result = await db_service.create_appointment(
-                    username, customer_name, customer_phone, therapist_id,
-                    appointment_date, appointment_time, service_type, notes
-                )
+                result = await db_service.create_appointment(appointment_data)
                 return result
             
             elif function_name == "get_user_appointments":
-                username = function_args.get("username")
-                results = await db_service.get_user_appointments(username)
+                phone = function_args.get("phone")
+                results = await db_service.get_user_appointments(phone)
                 return {
                     "success": True,
                     "data": results,
@@ -116,29 +114,52 @@ class OpenAIAdapter(BaseAdapter):
             
             elif function_name == "cancel_appointment":
                 appointment_id = function_args.get("appointment_id")
-                username = function_args.get("username")
-                result = await db_service.cancel_appointment(appointment_id, username)
+                phone = function_args.get("phone")
+                result = await db_service.cancel_appointment(appointment_id, phone)
                 return result
             
-            elif function_name == "query_therapist_availability":
+            elif function_name == "get_therapist_schedule":
                 therapist_id = function_args.get("therapist_id")
                 date = function_args.get("date")
-                results = await db_service.query_therapist_availability(therapist_id, date)
+                result = await db_service.get_therapist_schedule(therapist_id, date)
                 return {
                     "success": True,
-                    "data": results,
-                    "message": f"查询到 {len(results)} 个可用时间段"
+                    "data": result,
+                    "message": "技师排班查询成功"
                 }
             
             elif function_name == "search_therapists":
-                therapist_name = function_args.get("therapist_name")
-                store_name = function_args.get("store_name")
-                service_type = function_args.get("service_type")
+                store_id = function_args.get("store_id")
+                specialty = function_args.get("specialty")
+                min_experience = function_args.get("min_experience")
+                
+                # 使用新的搜索方法
                 results = await db_service.search_therapists(
-                    therapist_name=therapist_name, 
-                    store_name=store_name, 
-                    service_type=service_type
+                    store_id=store_id
                 )
+                
+                # 如果有专长或经验要求，进行后过滤
+                if specialty or min_experience:
+                    filtered_results = []
+                    for therapist in results:
+                        # 检查专长
+                        if specialty:
+                            specialties = therapist.get('specialties', [])
+                            if isinstance(specialties, str):
+                                specialties = [specialties]
+                            if not any(specialty.lower() in s.lower() for s in specialties):
+                                continue
+                        
+                        # 检查经验年限
+                        if min_experience:
+                            experience = therapist.get('years_of_experience', 0)
+                            if experience < min_experience:
+                                continue
+                        
+                        filtered_results.append(therapist)
+                    
+                    results = filtered_results
+                
                 return {
                     "success": True,
                     "data": results,
@@ -230,4 +251,7 @@ class OpenAIAdapter(BaseAdapter):
                 "success": False,
                 "error": str(e),
                 "message": f"函数 {function_name} 执行失败"
-            } 
+            }
+        finally:
+            # 确保数据库连接关闭
+            await db_service.close() 
