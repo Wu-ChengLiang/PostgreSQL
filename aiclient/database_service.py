@@ -177,7 +177,20 @@ class DatabaseAPIService:
             params['name'] = therapist_name
             
         self.logger.info(f"搜索技师: {params}")
-        therapists = await self._make_request("/client/therapists/search", params)
+        therapists_data = await self._make_request("/client/therapists/search", params)
+        
+        # 调试输出
+        self.logger.info(f"原始响应数据类型: {type(therapists_data)}")
+        self.logger.info(f"原始响应数据: {therapists_data}")
+        
+        # 处理新API结构
+        if isinstance(therapists_data, dict) and 'therapists' in therapists_data:
+            therapists = therapists_data['therapists']
+        elif isinstance(therapists_data, list):
+            therapists = therapists_data
+        else:
+            therapists = []
+            
         self.logger.info(f"查询到 {len(therapists)} 个技师")
         return therapists
     
