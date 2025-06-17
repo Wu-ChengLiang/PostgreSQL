@@ -165,13 +165,13 @@ document.addEventListener('DOMContentLoaded', () => {
             interval: interval
         }, (response) => {
             if (chrome.runtime.lastError) {
-                console.error("启动批量数据提取错误:", chrome.runtime.lastError.message);
+                console.error("启动循环数据提取错误:", chrome.runtime.lastError.message);
                 showMessage('启动失败', 'error');
             } else if (response && response.status === 'started') {
                 updateClickUI(true);
                 clickProgressSpan.textContent = `0/${count} - 准备开始(${speedMode})`;
                 clickProgressSpan.className = 'value connected';
-                showMessage(`开始批量提取${count}个联系人的数据 (${speedMode})`, 'success');
+                showMessage(`开始循环提取${count}个联系人的数据 (${speedMode})`, 'success');
             }
         });
     });
@@ -185,10 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tabId: currentTabId
         }, (response) => {
             if (chrome.runtime.lastError) {
-                console.error("停止批量数据提取错误:", chrome.runtime.lastError.message);
+                console.error("停止循环数据提取错误:", chrome.runtime.lastError.message);
             } else if (response && response.status === 'stopped') {
                 updateClickUI(false);
-                showMessage('已停止批量数据提取', 'warning');
+                showMessage('已停止循环数据提取', 'warning');
             }
         });
     });
@@ -226,12 +226,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // 监听来自content script的进度更新
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'clickProgress') {
-            const progressText = request.status ? 
-                `${request.current}/${request.total} - ${request.status}` : 
-                `${request.current}/${request.total}`;
+            let progressText;
+            if (request.round && request.isLooping) {
+                // 循环模式显示轮次信息
+                progressText = request.status ? 
+                    `第${request.round}轮 ${request.current}/${request.total} - ${request.status}` : 
+                    `第${request.round}轮 ${request.current}/${request.total}`;
+            } else {
+                // 普通模式
+                progressText = request.status ? 
+                    `${request.current}/${request.total} - ${request.status}` : 
+                    `${request.current}/${request.total}`;
+            }
             clickProgressSpan.textContent = progressText;
             
-            if (request.current >= request.total) {
+            // 循环模式不自动停止UI
+            if (!request.isLooping && request.current >= request.total) {
                 updateClickUI(false);
                 showMessage('联系人数据提取完成', 'success');
             }

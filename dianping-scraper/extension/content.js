@@ -18,6 +18,8 @@
             this.clickTimeout = null;
             this.clickCount = 0;
             this.totalClicks = 0;
+            this.currentRound = 1; // 当前轮次
+            this.totalProcessedContacts = 0; // 总处理的联系人数量
 
             // 记忆管理相关属性
             this.currentChatId = null;
@@ -636,22 +638,24 @@
             return { tuanInfo: tuanInfoList, count: tuanInfoList.length };
         }
         
-        startClickContacts(count = 10, interval = 2000) {
+        startClickContacts(count = 2, interval = 2000) {
             if (this.isClickingContacts) {
-                console.log('[DianpingExtractor] 批量提取已在进行中');
+                console.log('[DianpingExtractor] 循环提取已在进行中');
                 return;
             }
             
             this.isClickingContacts = true;
             this.clickCount = 0;
             this.totalClicks = count;
+            this.currentRound = 1; // 重置轮次
+            this.totalProcessedContacts = 0; // 重置总处理数量
             this.clickInterval = interval;
 
             // 动态调整内部延迟时间
             this.pageLoadWaitTime = Math.min(1500, interval * 0.6);
             this.extractionWaitTime = Math.min(2500, interval * 0.8);
             
-            console.log(`[DianpingExtractor] 开始批量提取，总数: ${count}, 间隔: ${interval}ms`);
+            console.log(`[DianpingExtractor] 开始循环提取，总数: ${count}, 间隔: ${interval}ms`);
             this.sendProgressUpdate();
             this.clickNextContact();
         }
@@ -665,15 +669,20 @@
                 this.clickTimeout = null;
             }
             
-            console.log('[DianpingExtractor] 批量提取已停止');
+            console.log('[DianpingExtractor] 循环提取已停止');
         }
         
         clickNextContact() {
-            if (!this.isClickingContacts || this.clickCount >= this.totalClicks) {
-                this.isClickingContacts = false;
-                console.log('[DianpingExtractor] 批量提取完成');
-                this.sendProgressUpdate();
+            if (!this.isClickingContacts) {
                 return;
+            }
+            
+            // 循环逻辑：当达到总数时，重置为0，继续循环
+            if (this.clickCount >= this.totalClicks) {
+                this.clickCount = 0;
+                this.currentRound++;
+                console.log(`[DianpingExtractor] 完成第${this.currentRound - 1}轮循环，开始第${this.currentRound}轮`);
+                this.sendProgressUpdate('重新开始循环');
             }
             
             try {
@@ -699,6 +708,7 @@
                 targetContact.click();
                 
                 this.clickCount++;
+                this.totalProcessedContacts++; // 更新总处理数量
                 this.sendProgressUpdate(`正在处理联系人: ${contactInfo.name}`);
                 
                 setTimeout(() => {
@@ -913,12 +923,8 @@
         proceedToNextContact() {
             if (!this.isClickingContacts) return;
             
-            if (this.clickCount < this.totalClicks) {
-                this.clickTimeout = setTimeout(() => this.clickNextContact(), this.clickInterval);
-            } else {
-                this.isClickingContacts = false;
-                this.sendProgressUpdate('所有联系人处理完成');
-            }
+            // 无限循环：始终继续到下一个联系人
+            this.clickTimeout = setTimeout(() => this.clickNextContact(), this.clickInterval);
         }
         
         sendProgressUpdate(status = '') {
@@ -927,7 +933,9 @@
                     type: 'clickProgress',
                     current: this.clickCount,
                     total: this.totalClicks,
-                    status: status
+                    round: this.currentRound,
+                    status: status,
+                    isLooping: true // 标识为循环模式
                 });
             } catch (error) {
                 console.error('[DianpingExtractor] 发送进度更新错误:', error);

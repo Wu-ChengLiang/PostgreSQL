@@ -58,20 +58,20 @@
                 </div>
             </section>
 
-            <!-- 联系人批量数据提取 -->
+            <!-- 联系人循环数据提取 -->
             <section class="section">
-                <h3>批量数据提取</h3>
+                <h3>循环提取模式</h3>
                 <div class="status-card">
                     <div class="status-item">
                         <span class="label">联系人数量:</span>
-                        <input type="number" id="contactCount" value="10" min="1" max="50" class="contact-input">
+                        <input type="number" id="contactCount" value="2" min="1" max="50" class="contact-input">
                     </div>
                     <div class="status-item">
-                        <span class="label">处理间隔:</span>
+                        <span class="label">切换间隔:</span>
                         <select id="clickInterval" class="contact-select">
-                            <option value="600" selected>中速(0.6秒)</option>
-                            <option value="2000">标准(2秒)</option>
-                            <option value="5000">慢速(5秒)</option>
+                            <option value="2000" selected>标准(2秒)</option>
+                            <option value="3000">慢速(3秒)</option>
+                            <option value="5000">超慢(5秒)</option>
                         </select>
                     </div>
                     <div class="status-item">
@@ -81,14 +81,14 @@
                 </div>
                 <div class="controls">
                     <button class="btn btn-secondary" id="startClickContacts">
-                        <span id="clickText">开始批量提取</span>
+                        <span id="clickText">开始循环提取</span>
                     </button>
                     <button class="btn btn-link" id="stopClickContacts" style="display: none;">
-                        停止提取
+                        停止循环
                     </button>
                 </div>
                 <div class="status-card" style="margin-top: 10px; font-size: 12px; color: #666;">
-                    <p><strong>功能说明：</strong>自动遍历联系人并提取聊天记录和团购信息</p>
+                    <p><strong>功能说明：</strong>循环模式，自动遍历指定数量的联系人并提取数据，完成后自动跳转到第1个联系人重新开始</p>
                 </div>
             </section>
         </main>
