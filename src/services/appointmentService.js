@@ -296,7 +296,7 @@ class AppointmentService {
 
             // 添加排序和分页
             const offset = (page - 1) * limit;
-            query += ' ORDER BY a.appointment_date DESC, a.start_time DESC LIMIT ? OFFSET ?';
+            query += ' ORDER BY a.id DESC LIMIT ? OFFSET ?';
             params.push(limit, offset);
 
             const appointments = await db.all(query, params);

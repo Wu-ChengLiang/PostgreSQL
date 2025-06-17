@@ -190,23 +190,86 @@ router.post('/appointments/smart', async (req, res, next) => {
         const finalAppointmentTime = appointment_time || '14:00';
         const finalTherapistName = therapist_name || '默认技师';
 
-        // 查找技师（简化逻辑）
-        const therapists = await therapistService.searchTherapists({
-            page: 1,
-            limit: 100
-        });
-
+        // 查找技师（智能匹配逻辑）
         let matchedTherapist = null;
-        if (therapists.therapists && therapists.therapists.length > 0) {
-            // 如果有技师姓名，尝试匹配
-            if (therapist_name) {
-                matchedTherapist = therapists.therapists.find(t => 
-                    t.name.includes(therapist_name.replace('老师', '').replace('师傅', ''))
-                );
+        let targetStoreId = null;
+        
+        // 1. 先根据门店名称找到门店ID
+        if (store_name) {
+            const stores = await storeService.getAllStores();
+            const targetStore = stores.find(s => 
+                s.name.includes(store_name.replace('·', '').replace('店', '')) ||
+                store_name.includes(s.name.replace('·', '').replace('店', ''))
+            );
+            if (targetStore) {
+                targetStoreId = targetStore.id;
+                console.log('🏪 找到目标门店:', targetStore.name, '(ID:', targetStore.id, ')');
             }
-            // 如果没找到，使用第一个技师
-            if (!matchedTherapist) {
-                matchedTherapist = therapists.therapists[0];
+        }
+        
+        // 2. 优先在指定门店搜索技师
+        if (targetStoreId && therapist_name) {
+            const storeTherapists = await therapistService.searchTherapists({
+                storeId: targetStoreId,
+                page: 1,
+                limit: 100
+            });
+            
+            if (storeTherapists.therapists && storeTherapists.therapists.length > 0) {
+                matchedTherapist = storeTherapists.therapists.find(t => 
+                    t.name.includes(therapist_name.replace('老师', '').replace('师傅', '')) ||
+                    therapist_name.includes(t.name.replace('老师', '').replace('师傅', ''))
+                );
+                
+                if (matchedTherapist) {
+                    console.log('✅ 在指定门店找到技师:', matchedTherapist.name);
+                }
+            }
+        }
+        
+        // 3. 如果在指定门店没找到，搜索所有门店
+        if (!matchedTherapist && therapist_name) {
+            const allTherapists = await therapistService.searchTherapists({
+                page: 1,
+                limit: 100
+            });
+            
+            if (allTherapists.therapists && allTherapists.therapists.length > 0) {
+                matchedTherapist = allTherapists.therapists.find(t => 
+                    t.name.includes(therapist_name.replace('老师', '').replace('师傅', '')) ||
+                    therapist_name.includes(t.name.replace('老师', '').replace('师傅', ''))
+                );
+                
+                if (matchedTherapist) {
+                    console.log('⚠️ 在其他门店找到技师:', matchedTherapist.name, '门店ID:', matchedTherapist.store_id);
+                }
+            }
+        }
+        
+        // 4. 如果还是没找到，在指定门店选择第一个技师
+        if (!matchedTherapist && targetStoreId) {
+            const storeTherapists = await therapistService.searchTherapists({
+                storeId: targetStoreId,
+                page: 1,
+                limit: 100
+            });
+            
+            if (storeTherapists.therapists && storeTherapists.therapists.length > 0) {
+                matchedTherapist = storeTherapists.therapists[0];
+                console.log('🎯 使用指定门店的默认技师:', matchedTherapist.name);
+            }
+        }
+        
+        // 5. 最后的备选：使用任意技师
+        if (!matchedTherapist) {
+            const allTherapists = await therapistService.searchTherapists({
+                page: 1,
+                limit: 100
+            });
+            
+            if (allTherapists.therapists && allTherapists.therapists.length > 0) {
+                matchedTherapist = allTherapists.therapists[0];
+                console.log('💡 使用备选技师:', matchedTherapist.name);
             }
         }
 
