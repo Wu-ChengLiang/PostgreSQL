@@ -42,8 +42,16 @@ class AIClient:
     
     async def generate_customer_service_reply(self, customer_message: str, 
                                              preferred_provider: Optional[AIProvider] = None,
-                                             conversation_history: Optional[List[Dict[str, Any]]] = None) -> AIResponse:
-        """生成客服回复（支持Function Call）"""
+                                             conversation_history: Optional[List[Dict[str, Any]]] = None,
+                                             context_info: Optional[Dict[str, Any]] = None) -> AIResponse:
+        """生成客服回复（支持Function Call）
+        
+        Args:
+            customer_message: 客户消息
+            preferred_provider: 偏好的AI提供商
+            conversation_history: 对话历史
+            context_info: 上下文信息（店铺名称、联系人信息等）
+        """
         if not customer_message.strip():
             raise ValueError("客户消息不能为空")
         
@@ -57,6 +65,17 @@ class AIClient:
         # 调试日志
         logger.info(f"[AI调试] 收到客户消息: {customer_message}")
         logger.info(f"[AI调试] 对话历史长度: {len(history_to_use)}")
+        
+        # 处理上下文信息
+        if context_info:
+            logger.info(f"[AI调试] 上下文信息: {context_info}")
+            shop_name = context_info.get('shopName')
+            contact_name = context_info.get('contactName') 
+            combined_name = context_info.get('combinedName')
+            
+            if combined_name:
+                logger.info(f"[AI调试] 当前对话对象: {combined_name}")
+        
         if history_to_use:
             logger.info(f"[AI调试] 历史记录预览:")
             for i, mem in enumerate(history_to_use[-3:], 1):
@@ -64,8 +83,8 @@ class AIClient:
                 content = mem.get("content", "")[:30]
                 logger.info(f"  {i}. {role}: {content}...")
         
-        # 创建带有对话历史的客服提示词
-        request = adapter.create_customer_service_prompt_with_history(customer_message, history_to_use)
+        # 创建带有对话历史和上下文的客服提示词
+        request = adapter.create_customer_service_prompt_with_history(customer_message, history_to_use, context_info)
         
         logger.info(f"为客户消息生成回复，使用提供商: {provider.value}")
         logger.debug(f"客户消息: {customer_message}")

@@ -201,10 +201,18 @@ class DianpingWebSocketServer:
         full_history = db_manager.get_chat_history(chat_id, limit=50)
         logger.info(f"[AI触发] 为AI加载了 {len(full_history)} 条来自数据库的历史记录")
 
+        # 提取上下文信息
+        context_info = payload.get("contextInfo")
+        if context_info:
+            logger.info(f"[AI触发] 检测到上下文信息: {context_info}")
+        else:
+            logger.warning(f"[AI触发] 未检测到上下文信息，payload keys: {list(payload.keys())}")
+        
         try:
             ai_response = await self.ai_client.generate_customer_service_reply(
                 customer_message=message_content,
-                conversation_history=full_history
+                conversation_history=full_history,
+                context_info=context_info
             )
 
             if ai_response and ai_response.content:
@@ -245,11 +253,20 @@ class DianpingWebSocketServer:
         
         logger.info(f"[记忆保存] {contact_name} ({chat_id}): 保存 {len(conversation_memory)} 条记忆")
         
+        # 提取上下文信息（如果有）
+        context_info = payload.get("contextInfo")
+        if context_info:
+            logger.info(f"[记忆保存] 上下文信息: {context_info}")
+        
         # 保存所有记忆到数据库（不重复保存已存在的消息）
         saved_count = 0
         for message in conversation_memory:
             message['chatId'] = message.get('chatId', chat_id)
             message['contactName'] = message.get('contactName', contact_name)
+            
+            # 如果有上下文信息，添加到消息中
+            if context_info:
+                message['contextInfo'] = context_info
             
             message_id = db_manager._generate_message_id(message)
             

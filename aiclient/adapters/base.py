@@ -338,14 +338,35 @@ class BaseAdapter(ABC):
         )
     
     def create_customer_service_prompt_with_history(self, customer_message: str, 
-                                                   conversation_history: list = None) -> AIRequest:
-        """创建带有对话历史的客服回复提示词"""
+                                                   conversation_history: list = None,
+                                                   context_info: dict = None) -> AIRequest:
+        """创建带有对话历史和上下文信息的客服回复提示词
+        
+        Args:
+            customer_message: 客户消息
+            conversation_history: 对话历史
+            context_info: 上下文信息（店铺名称、联系人信息等）
+        """
         
         # 如果没有历史记录，回退到普通方法
         if not conversation_history:
             return self.create_customer_service_prompt(customer_message)
         
-        system_prompt = """你是名医堂的智能客服助理，
+        # 构建上下文信息文本
+        context_text = ""
+        if context_info:
+            shop_name = context_info.get('shopName')
+            contact_name = context_info.get('contactName')
+            combined_name = context_info.get('combinedName')
+            
+            if combined_name:
+                context_text = f"\n【当前对话对象】: {combined_name}"
+            elif shop_name and contact_name:
+                context_text = f"\n【当前对话对象】: {shop_name} - {contact_name}"
+            elif shop_name:
+                context_text = f"\n【当前门店】: {shop_name}"
+        
+        system_prompt = f"""你是名医堂的智能客服助理，{context_text}
 
 你可以调用以下数据库查询功能来为客户提供准确的信息：
 - query_therapist_availability: 查询技师可用时间

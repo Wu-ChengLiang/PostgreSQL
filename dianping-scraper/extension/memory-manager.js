@@ -52,6 +52,16 @@ class MemoryManager {
                 return;
             }
 
+            // 构建上下文信息
+            const contextInfo = {
+                shopName: this.currentShopName,
+                contactName: this.currentContactName,
+                combinedName: this.combinedContactName,
+                chatId: this.currentChatId
+            };
+            
+            console.log(`[MemoryManager] 保存记忆-构建上下文信息:`, contextInfo);
+
             const memoryData = {
                 type: 'memory_save',
                 payload: {
@@ -59,6 +69,7 @@ class MemoryManager {
                     chatId: this.currentChatId,
                     contactName: this.combinedContactName, // 修改：使用组合名称
                     conversationMemory: this.conversationMemory.slice(),
+                    contextInfo: contextInfo, // 新增：上下文信息
                     timestamp: Date.now()
                 }
             };
@@ -253,6 +264,16 @@ class MemoryManager {
                 return;
             }
 
+            // 构建上下文信息
+            const contextInfo = {
+                shopName: this.currentShopName,
+                contactName: this.currentContactName,
+                combinedName: this.combinedContactName,
+                chatId: this.currentChatId
+            };
+            
+            console.log(`[MemoryManager] 构建上下文信息:`, contextInfo);
+
             const updateData = {
                 type: 'memory_update',
                 payload: {
@@ -261,9 +282,12 @@ class MemoryManager {
                     contactName: this.combinedContactName, // 修改：使用组合名称
                     message: messageData,
                     conversationMemory: this.conversationMemory.slice(),
+                    contextInfo: contextInfo, // 新增：上下文信息
                     timestamp: Date.now()
                 }
             };
+            
+            console.log(`[MemoryManager] 发送记忆更新数据:`, JSON.stringify(updateData, null, 2));
 
             chrome.runtime.sendMessage({
                 type: 'extractedData',
@@ -271,6 +295,8 @@ class MemoryManager {
             }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.warn('[MemoryManager] 记忆更新失败，扩展上下文可能已失效:', chrome.runtime.lastError.message);
+                } else {
+                    console.log(`[MemoryManager] 记忆更新成功，包含上下文: ${this.combinedContactName}`);
                 }
             });
         } catch (error) {
