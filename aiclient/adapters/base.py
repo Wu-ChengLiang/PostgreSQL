@@ -254,7 +254,7 @@ class BaseAdapter(ABC):
                 "type": "function",
                 "function": {
                     "name": "create_smart_appointment",
-                    "description": "智能预约功能：支持两种模式：1)自然语言模式-根据客户消息和上下文自动解析创建预约；2)结构化数据模式-直接使用解析好的预约信息创建预约。优先推荐使用结构化数据模式，更快更准确。",
+                    "description": "智能预约功能：支持两种模式：1)自然语言模式-根据客户消息和上下文自动解析创建预约；2)结构化数据模式-直接使用解析好的预约信息创建预约。优先推荐使用结构化数据模式，更快更准确。重要：必须从客户消息中提取完整的姓名和电话号码信息。",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -268,7 +268,11 @@ class BaseAdapter(ABC):
                             },
                             "customer_name": {
                                 "type": "string",
-                                "description": "客户姓名，例如：'联系人_1750127546284'"
+                                "description": "客户姓名，从客户消息中提取真实姓名，例如：'吴城良'、'张三'"
+                            },
+                            "customer_phone": {
+                                "type": "string",
+                                "description": "客户电话号码，从客户消息中提取11位手机号，例如：'19357509506'。如果客户提供了电话号码，必须提取此字段"
                             },
                             "store_name": {
                                 "type": "string",
@@ -440,24 +444,29 @@ class BaseAdapter(ABC):
 - query_therapist_availability: 查询技师可用时间
 - search_therapists: 搜索技师信息  
 - query_technician_schedule: 查询技师排班
-- create_appointment: 创建预约（需要客户提供姓名和电话）
 - get_user_appointments: 查看用户预约列表
-- cancel_appointment: 取消预约
-- get_appointment_details: 查询预约详情
 - get_stores: 获取门店信息
-- send_appointment_emails: 发送预约邮件通知（客户确认+技师通知）
 - create_smart_appointment: 智能预约（推荐）- 当客户提出预约需求时，优先使用此功能
-
+- send_appointment_emails: 发送预约邮件通知（客户确认+技师通知）
 【智能预约流程】：
-1. 当客户表达预约意向时，优先使用create_smart_appointment功能
-2. 此功能会自动：
+1. 当客户表达预约意向时，使用create_smart_appointment功能
+2. **重要**：仔细分析客户消息，提取完整信息：
+   - 客户姓名：从消息中识别真实姓名（如"吴城良"、"张三"等）
+   - 客户电话：提取11位手机号（如"19357509506"），这是关键信息
+   - 技师姓名：识别技师称谓（如"周老师"、"马师傅"等）
+   - 预约时间：解析时间表达（如"下午3点"、"16:30"等）
+3. 此功能会自动：
    - 解析客户的自然语言预约请求（技师姓名、时间等）
    - 结合对话上下文信息（门店、联系人信息）
    - 查找匹配的技师并检查可用性
    - 自动创建预约记录
    - 发送确认邮件给客户和技师
-3. 如果智能预约失败，再使用传统的create_appointment流程
 4. 避免重复确认，一次操作完成所有步骤
+
+【客户信息提取原则】：
+- 优先从客户消息中提取真实姓名和电话，而不是使用上下文中的联系人ID
+- 当客户提供"姓名+电话"格式时（如"吴城良 19357509506"），必须同时提取两个字段
+- 电话号码通常是11位数字，要准确识别和提取
 
 
 工作原则：
