@@ -9,15 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const websocketStatus = document.getElementById('websocketStatus');
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const currentShop = document.getElementById('currentShop');
 
     // 联系人点击控件
     const startClickButton = document.getElementById('startClickContacts');
     const stopClickButton = document.getElementById('stopClickContacts');
     const clickText = document.getElementById('clickText');
     const contactCountInput = document.getElementById('contactCount');
-    const clickIntervalSelect = document.getElementById('clickInterval');
+    const switchIntervalInput = document.getElementById('switchInterval');
     const clickProgressSpan = document.getElementById('clickProgress');
+    const currentShop = document.getElementById('currentShop');
 
     // 测试发送按钮
     const testSendButton = document.getElementById('testSendButton');
@@ -61,12 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
             startClickButton.style.display = 'none';
             stopClickButton.style.display = 'block';
             contactCountInput.disabled = true;
-            clickIntervalSelect.disabled = true;
+            switchIntervalInput.disabled = true;
         } else {
             startClickButton.style.display = 'block';
             stopClickButton.style.display = 'none';
             contactCountInput.disabled = false;
-            clickIntervalSelect.disabled = false;
+            switchIntervalInput.disabled = false;
             clickProgressSpan.textContent = '已停止';
             clickProgressSpan.className = 'value warning';
         }
@@ -110,21 +110,21 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (response) {
                 updateUI(response.isExtracting);
                 updateWebsocketStatusUI(response.isConnected);
+
+                // 新增：从内容脚本获取店铺名称
+                chrome.tabs.sendMessage(currentTabId, { type: 'getShopName' }, (shopResponse) => {
+                    if (chrome.runtime.lastError) {
+                        console.warn("无法获取店铺名称:", chrome.runtime.lastError.message);
+                        return;
+                    }
+                    if (shopResponse && shopResponse.shopName) {
+                        currentShop.textContent = shopResponse.shopName;
+                        currentShop.className = 'value connected';
+                    }
+                });
             } else {
                 updateUI(false);
                 updateWebsocketStatusUI(false);
-            }
-        });
-
-        // 从内容脚本获取店铺名称
-        chrome.tabs.sendMessage(currentTabId, { type: 'getShopName' }, (shopResponse) => {
-            if (chrome.runtime.lastError) {
-                console.warn("无法获取店铺名称:", chrome.runtime.lastError.message);
-                return;
-            }
-            if (shopResponse && shopResponse.shopName) {
-                currentShop.textContent = shopResponse.shopName;
-                currentShop.className = 'value connected';
             }
         });
     });
@@ -143,20 +143,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 开始点击联系人
+    // 开始稳定工作
     startClickButton.addEventListener('click', () => {
         if (!currentTabId || startClickButton.disabled) return;
 
-        const count = parseInt(contactCountInput.value) || 10;
-        const interval = parseInt(clickIntervalSelect.value) || 2000;
+        const count = parseInt(contactCountInput.value) || 2;
+        const intervalSeconds = parseFloat(switchIntervalInput.value) || 3;
+        const interval = intervalSeconds * 1000; // 转换为毫秒
 
         if (count < 1 || count > 50) {
             showMessage('请输入1-50之间的联系人数量', 'error');
             return;
         }
 
-        // 显示当前模式
-        let speedMode = interval <= 1000 ? '中速' : (interval <= 2000 ? '标准' : '慢速');
+        if (intervalSeconds < 1 || intervalSeconds > 30) {
+            showMessage('请输入1-30秒之间的切换间隔', 'error');
+            return;
+        }
 
         chrome.runtime.sendMessage({
             type: 'startClickContacts',
@@ -165,13 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
             interval: interval
         }, (response) => {
             if (chrome.runtime.lastError) {
-                console.error("启动批量数据提取错误:", chrome.runtime.lastError.message);
+                console.error("启动稳定工作错误:", chrome.runtime.lastError.message);
                 showMessage('启动失败', 'error');
             } else if (response && response.status === 'started') {
                 updateClickUI(true);
-                clickProgressSpan.textContent = `0/${count} - 准备开始(${speedMode})`;
+                clickProgressSpan.textContent = `第1轮 0/${count} - 准备开始(循环模式)`;
                 clickProgressSpan.className = 'value connected';
-                showMessage(`开始批量提取${count}个联系人的数据 (${speedMode})`, 'success');
+                showMessage(`开始稳定工作循环处理${count}个联系人(${intervalSeconds}秒间隔)`, 'success');
             }
         });
     });
@@ -185,10 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tabId: currentTabId
         }, (response) => {
             if (chrome.runtime.lastError) {
-                console.error("停止批量数据提取错误:", chrome.runtime.lastError.message);
+                console.error("停止稳定工作错误:", chrome.runtime.lastError.message);
             } else if (response && response.status === 'stopped') {
                 updateClickUI(false);
-                showMessage('已停止批量数据提取', 'warning');
+                showMessage('已停止稳定工作', 'warning');
             }
         });
     });
@@ -226,18 +229,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // 监听来自content script的进度更新
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'clickProgress') {
-            const progressText = request.status ? 
-                `${request.current}/${request.total} - ${request.status}` : 
-                `${request.current}/${request.total}`;
+            let progressText;
+            if (request.isLooping) {
+                // 循环模式显示
+                progressText = request.status ? 
+                    `第${request.round}轮 ${request.current}/${request.total} - ${request.status}` : 
+                    `第${request.round}轮 ${request.current}/${request.total} (循环中)`;
+            } else {
+                // 普通模式显示
+                progressText = request.status ? 
+                    `${request.current}/${request.total} - ${request.status}` : 
+                    `${request.current}/${request.total}`;
+            }
             clickProgressSpan.textContent = progressText;
             
-            if (request.current >= request.total) {
+            // 循环模式下不自动停止
+            if (!request.isLooping && request.current >= request.total) {
                 updateClickUI(false);
-                showMessage('联系人数据提取完成', 'success');
+                showMessage('稳定工作完成', 'success');
             }
         } else if (request.type === 'clickError') {
             updateClickUI(false);
-            showMessage(request.message || '点击过程中发生错误', 'error');
+            showMessage(request.message || '工作过程中发生错误', 'error');
         } else if (request.type === 'shopInfoUpdate') {
             if (request.shopName) {
                 currentShop.textContent = request.shopName;

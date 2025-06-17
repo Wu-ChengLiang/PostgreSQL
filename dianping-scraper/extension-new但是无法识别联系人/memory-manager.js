@@ -19,6 +19,16 @@ class MemoryManager {
      */
     initMemoryManager() {
         this.setupAutoSave();
+        
+        // 自动检测和加载记忆的逻辑现在由 content.js 的轮询触发
+        // 这里可以保留一个备用检测，以防万一
+        setTimeout(() => {
+            if (!this.isContactDetected()) {
+                console.log('[MemoryManager] 初始化时的备用联系人检测...');
+                this.autoDetectCurrentContact();
+            }
+        }, 1000);
+        
         console.log('[MemoryManager] 记忆管理器初始化完成');
     }
 
@@ -207,6 +217,16 @@ class MemoryManager {
     }
 
     /**
+     * 检查是否已成功检测到有效联系人
+     * "默认联系人"或"错误恢复"不被认为是有效联系人
+     */
+    isContactDetected() {
+        return this.currentContactName && 
+               !this.currentContactName.startsWith('默认') && 
+               !this.currentContactName.startsWith('错误恢复');
+    }
+
+    /**
      * 添加消息到记忆（带AI回复触发）
      */
     addToMemory(messageData) {
@@ -329,7 +349,65 @@ class MemoryManager {
      * 为当前联系人加载记忆
      */
     loadMemoryForCurrentContact() {
-        // 实现为当前联系人加载记忆的逻辑
+        if (!this.isMemoryEnabled || !this.isContactDetected()) {
+            console.log('[MemoryManager] 记忆功能未启用或无有效联系人，跳过加载');
+            return;
+        }
+
+        // 确保chatId有前缀
+        if (!this.currentChatId || !this.currentChatId.startsWith('chat_')) {
+            console.warn(`[MemoryManager] 尝试加载记忆时发现无效的ChatID: ${this.currentChatId}，正在重新检测...`);
+            this.autoDetectCurrentContact();
+            if (!this.currentChatId || !this.currentChatId.startsWith('chat_')) {
+                console.error(`[MemoryManager] 重新检测后ChatID仍然无效: ${this.currentChatId}，无法加载记忆。`);
+                return;
+            }
+        }
+
+        try {
+            if (!chrome.runtime || !chrome.runtime.sendMessage) {
+                console.warn('[MemoryManager] 扩展上下文无效，跳过记忆加载');
+                return;
+            }
+
+            console.log(`[MemoryManager] 📤 开始加载联系人记忆: ${this.combinedContactName} (ChatID: ${this.currentChatId})`);
+
+            const loadData = {
+                type: 'memory_load',
+                payload: {
+                    action: 'load',
+                    chatId: this.currentChatId,
+                    contactName: this.currentContactName, // 发送原始名称
+                    limit: this.maxMemoryLength,
+                    timestamp: Date.now()
+                }
+            };
+
+            chrome.runtime.sendMessage({
+                type: 'extractedData',
+                data: loadData
+            }, (response) => {
+                if (chrome.runtime.lastError) {
+                    console.warn(`[MemoryManager] ❌ 记忆加载失败: ${chrome.runtime.lastError.message}`);
+                    return;
+                }
+                
+                console.log(`[MemoryManager] 📥 收到记忆加载响应 for ${this.currentContactName}:`, response);
+                
+                if (response && response.memory) {
+                    this.conversationMemory = response.memory.slice();
+                    console.log(`[MemoryManager] ✅ 成功加载 ${this.conversationMemory.length} 条历史记忆: ${this.combinedContactName}`);
+                    this.onMemoryLoaded();
+                } else {
+                    console.log(`[MemoryManager] ⚠️ 未找到历史记忆或响应异常: ${this.combinedContactName}`);
+                    this.conversationMemory = [];
+                }
+            });
+
+        } catch (error) {
+            console.warn('[MemoryManager] 加载记忆时发生异常:', error.message);
+            this.conversationMemory = [];
+        }
     }
 
     /**

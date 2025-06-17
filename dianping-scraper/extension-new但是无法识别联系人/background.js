@@ -126,14 +126,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ status: 'error', message: '无tabId' });
                 return true;
             }
-            console.log(`[Background] 开始批量提取 tab ${tabId}, 数量: ${message.count}`);
+            console.log(`[Background] 开始稳定工作 tab ${tabId}, 数量: ${message.count}`);
             chrome.tabs.sendMessage(tabId, { 
                 type: 'startClickContacts', 
                 count: message.count, 
                 interval: message.interval 
             }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error('[Background] 启动批量提取错误:', chrome.runtime.lastError.message);
+                    console.error('[Background] 启动稳定工作错误:', chrome.runtime.lastError.message);
                     sendResponse({ status: 'error', message: chrome.runtime.lastError.message });
                 } else {
                     sendResponse({ status: 'started' });
@@ -146,10 +146,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ status: 'error', message: '无tabId' });
                 return true;
             }
-            console.log(`[Background] 停止批量提取 tab ${tabId}`);
+            console.log(`[Background] 停止稳定工作 tab ${tabId}`);
             chrome.tabs.sendMessage(tabId, { type: 'stopClickContacts' }, (response) => {
                 if (chrome.runtime.lastError) {
-                    console.error('[Background] 停止批量提取错误:', chrome.runtime.lastError.message);
+                    console.error('[Background] 停止工作错误:', chrome.runtime.lastError.message);
                     sendResponse({ status: 'error', message: chrome.runtime.lastError.message });
                 } else {
                     sendResponse({ status: 'stopped' });

@@ -28,7 +28,13 @@
     "content_scripts": [
         {
             "matches": ["*://*.dianping.com/*"],
-            "js": ["content.js"],
+            "js": [
+                "extension-utils.js",
+                "memory-manager.js",
+                "data-extractor.js", 
+                "message-sender.js",
+                "content.js"
+            ],
             "css": ["popup.css"],
             "all_frames": true,
             "run_at": "document_end"

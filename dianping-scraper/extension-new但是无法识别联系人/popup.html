@@ -12,7 +12,7 @@
         <header class="header">
             <div class="logo">
                 <img src="icons/icon48.png" alt="Logo" class="logo-img">
-                <h1 class="title">大众点评数据提取器</h1>
+                <h1 class="title">大众点评AIGENT客服</h1>
             </div>
             <div class="status-indicator" id="statusIndicator">
                 <span class="status-dot" id="statusDot"></span>
@@ -45,6 +45,37 @@
                 </div>
             </section>
 
+            
+            <!-- 联系人批量数据提取 -->
+            <section class="section">
+                <h3>稳定工作</h3>
+                <div class="status-card">
+                    <div class="status-item">
+                        <span class="label">联系人数量:</span>
+                        <input type="number" id="contactCount" value="2" min="1" max="50" class="contact-input">
+                    </div>
+                    <div class="status-item">
+                        <span class="label">切换间隔(秒):</span>
+                        <input type="number" id="switchInterval" value="3" min="1" max="30" step="0.5" class="contact-input">
+                    </div>
+                    <div class="status-item">
+                        <span class="label">进度:</span>
+                        <span class="value" id="clickProgress">未开始</span>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button class="btn btn-secondary" id="startClickContacts">
+                        <span id="clickText">开始稳定工作</span>
+                    </button>
+                    <button class="btn btn-link" id="stopClickContacts" style="display: none;">
+                        停止工作
+                    </button>
+                </div>
+                <div class="status-card" style="margin-top: 10px; font-size: 12px; color: #666;">
+                    <p><strong>功能说明：</strong>稳定循环模式，自动遍历联系人并提取数据，可自定义切换间隔(1-30秒)，完成后自动跳转到联系人1重新开始</p>
+                </div>
+            </section>
+        
             <!-- 控制按钮 -->
             <section class="section">
                 <h3>控制面板</h3>
@@ -57,45 +88,12 @@
                     </button>
                 </div>
             </section>
-
-            <!-- 联系人批量数据提取 -->
-            <section class="section">
-                <h3>批量数据提取</h3>
-                <div class="status-card">
-                    <div class="status-item">
-                        <span class="label">联系人数量:</span>
-                        <input type="number" id="contactCount" value="10" min="1" max="50" class="contact-input">
-                    </div>
-                    <div class="status-item">
-                        <span class="label">处理间隔:</span>
-                        <select id="clickInterval" class="contact-select">
-                            <option value="600" selected>中速(0.6秒)</option>
-                            <option value="2000">标准(2秒)</option>
-                            <option value="5000">慢速(5秒)</option>
-                        </select>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">进度:</span>
-                        <span class="value" id="clickProgress">未开始</span>
-                    </div>
-                </div>
-                <div class="controls">
-                    <button class="btn btn-secondary" id="startClickContacts">
-                        <span id="clickText">开始批量提取</span>
-                    </button>
-                    <button class="btn btn-link" id="stopClickContacts" style="display: none;">
-                        停止提取
-                    </button>
-                </div>
-                <div class="status-card" style="margin-top: 10px; font-size: 12px; color: #666;">
-                    <p><strong>功能说明：</strong>自动遍历联系人并提取聊天记录和团购信息</p>
-                </div>
-            </section>
+        
         </main>
 
         <!-- 底部 -->
         <footer class="footer">
-            <div class="version">版本 1.0.0 精简版</div>
+            <div class="version">版本 1.0.0 </div>
         </footer>
     </div>
 
