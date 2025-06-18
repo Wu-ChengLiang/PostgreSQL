@@ -7,13 +7,7 @@ class DataExtractor {
     constructor() {
         this.extractedData = new Set();
         this.observer = null;
-        
-        // 数据提取选择器
-        this.selectors = {
-            chatMessageList: '.text-message.normal-text, .rich-message, .text-message.shop-text',
-            tuanInfo: '.tuan',
-            contactItems: '.chat-list-item',
-        };
+        this.utils = window.DianpingUtils;
     }
 
     /**
@@ -31,53 +25,10 @@ class DataExtractor {
     }
 
     /**
-     * 查找所有元素（包括Shadow DOM）
-     */
-    findAllElements(selector, root) {
-        let elements = [];
-        try {
-            Array.prototype.push.apply(elements, root.querySelectorAll(selector));
-            const descendants = root.querySelectorAll('*');
-            for (const el of descendants) {
-                if (el.shadowRoot) {
-                    const nestedElements = this.findAllElements(selector, el.shadowRoot);
-                    Array.prototype.push.apply(elements, nestedElements);
-                }
-            }
-        } catch (e) {
-            // 忽略错误
-        }
-        return elements;
-    }
-
-    /**
-     * 格式化店铺名称
+     * 格式化店铺名称 (委托给工具类)
      */
     formatShopName(rawName) {
-        if (!rawName) {
-            return null;
-        }
-
-        let formattedName = rawName;
-
-        // 移除城市前缀，例如 "上海 - "
-        formattedName = formattedName.replace(/^.+?\s*-\s*/, '');
-
-        // 移除括号前的多余空格
-        formattedName = formattedName.replace(/\s+\(/, '(');
-
-        // 将半角括号替换为全角括号
-        formattedName = formattedName.replace(/\(/g, '（').replace(/\)/g, '）');
-        
-        // 移除全角括号内部的所有空格
-        formattedName = formattedName.replace(/（([^）]+)）/g, (match, innerContent) => {
-            return `（${innerContent.replace(/\s/g, '')}）`;
-        });
-
-        const finalName = formattedName.trim();
-        console.log(`[DataExtractor] 店铺名称格式化: "${rawName}" -> "${finalName}"`);
-
-        return finalName;
+        return this.utils.formatShopName(rawName);
     }
 
     /**
@@ -85,14 +36,14 @@ class DataExtractor {
      */
     waitForShopNameWithObserver(timeout = 5000) {
         return new Promise(resolve => {
-            const selector = '.userinfo-from-shop';
+            const selector = this.utils.selectors.shopInfo;
 
             // 立即检查元素是否已存在
-            const existingElements = this.findAllElements(selector, document);
+            const existingElements = this.utils.findAllElements(selector, document);
             if (existingElements.length > 0 && existingElements[0].textContent.trim()) {
                 console.log('[DataExtractor] 店铺名称被立即找到 (Shadow DOM)');
                 const rawShopName = existingElements[0].textContent.trim();
-                resolve(this.formatShopName(rawShopName));
+                resolve(this.utils.formatShopName(rawShopName));
                 return;
             }
 
@@ -100,13 +51,13 @@ class DataExtractor {
             let timer = null;
 
             const observer = new MutationObserver((mutationsList, obs) => {
-                const shopElements = this.findAllElements(selector, document);
+                const shopElements = this.utils.findAllElements(selector, document);
                 if (shopElements.length > 0 && shopElements[0].textContent.trim()) {
                     console.log('[DataExtractor] 通过 MutationObserver 找到店铺名称 (Shadow DOM)');
                     const rawShopName = shopElements[0].textContent.trim();
                     if (timer) clearTimeout(timer);
                     obs.disconnect();
-                    resolve(this.formatShopName(rawShopName));
+                    resolve(this.utils.formatShopName(rawShopName));
                 }
             });
 
@@ -147,7 +98,7 @@ class DataExtractor {
      */
     extractChatMessages(memoryManager) {
         const messages = [];
-        const messageNodes = this.findAllElements(this.selectors.chatMessageList, document);
+        const messageNodes = this.utils.findAllElements(this.utils.selectors.chatMessageList, document);
         const memoryStatus = memoryManager.getMemoryStatus();
 
         messageNodes.forEach((node, index) => {
@@ -171,7 +122,7 @@ class DataExtractor {
 
             if (content && !this.extractedData.has(uniqueKey)) {
                 const messageData = {
-                    id: `msg_${Date.now()}_${index}`,
+                    id: this.utils.generateId('msg'),
                     type: 'chat_message',
                     messageType: messageType,
                     content: prefixedContent,
@@ -205,7 +156,7 @@ class DataExtractor {
      */
     extractTuanInfo() {
         const tuanInfoList = [];
-        const tuanNodes = this.findAllElements(this.selectors.tuanInfo, document);
+        const tuanNodes = this.utils.findAllElements(this.utils.selectors.tuanInfo, document);
 
         tuanNodes.forEach((node, index) => {
             try {
@@ -224,7 +175,7 @@ class DataExtractor {
                     const image = imageNode ? imageNode.src : '';
 
                     tuanInfoList.push({
-                        id: `tuan_${Date.now()}_${index}`,
+                        id: this.utils.generateId('tuan'),
                         type: 'tuan_info',
                         content: {
                             name,

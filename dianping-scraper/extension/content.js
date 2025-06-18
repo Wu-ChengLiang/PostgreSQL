@@ -65,8 +65,7 @@
                              .catch(error => sendResponse({ status: 'failed', message: error.message }));
                         break;
                     case 'getShopName':
-                        const shopInfoElement = document.querySelector('.userinfo-from-shop');
-                        const shopName = shopInfoElement ? this.dataExtractor.formatShopName(shopInfoElement.textContent.trim()) : null;
+                        const shopName = window.DianpingUtils.getCurrentShopName();
                         sendResponse({ shopName: shopName });
                         break;
                 }
@@ -144,7 +143,7 @@
             // 将AI回复添加到记忆中
             const memoryStatus = this.memoryManager.getMemoryStatus();
             const aiReplyData = {
-                id: `ai_reply_${Date.now()}`,
+                id: window.DianpingUtils.generateId('ai_reply'),
                 type: 'chat_message',
                 messageType: 'shop',
                 content: `[商家] ${replyText}`,
@@ -240,19 +239,8 @@
          * 发送店铺信息更新
          */
         sendShopInfoUpdate() {
-            try {
-                const shopInfoElement = document.querySelector('.userinfo-from-shop');
-                const shopName = shopInfoElement ? this.dataExtractor.formatShopName(shopInfoElement.textContent.trim()) : null;
-                
-                if (shopName) {
-                    chrome.runtime.sendMessage({
-                        type: 'shopInfoUpdate',
-                        shopName: shopName
-                    });
-                }
-            } catch (error) {
-                console.error('[DianpingExtractor] 发送店铺信息更新错误:', error);
-            }
+            const shopName = window.DianpingUtils.getCurrentShopName();
+            window.DianpingUtils.sendShopInfoUpdate(shopName);
         }
         
         /**
@@ -317,6 +305,11 @@
     }
     
     // 确保依赖模块已加载
+    if (typeof window.DianpingUtils === 'undefined') {
+        console.error('[DianpingExtractor] DianpingUtils未加载，请检查utils.js是否正确加载');
+        return;
+    }
+    
     if (typeof MemoryManager === 'undefined') {
         console.error('[DianpingExtractor] MemoryManager未加载，请检查memory.js是否正确加载');
         return;

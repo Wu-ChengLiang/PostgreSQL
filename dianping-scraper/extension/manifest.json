@@ -29,6 +29,7 @@
         {
             "matches": ["*://*.dianping.com/*"],
             "js": [
+                "utils.js",
                 "memory.js",
                 "data-extractor.js",
                 "contact-manager.js", 

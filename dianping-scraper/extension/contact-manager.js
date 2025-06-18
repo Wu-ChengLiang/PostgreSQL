@@ -15,11 +15,7 @@ class ContactManager {
         this.clickInterval = 2000;
         this.pageLoadWaitTime = 1500;
         this.extractionWaitTime = 2500;
-
-        // 选择器
-        this.selectors = {
-            contactItems: '.chat-list-item',
-        };
+        this.utils = window.DianpingUtils;
     }
 
     /**
@@ -84,8 +80,7 @@ class ContactManager {
             }
             
             // 检测店铺名称
-            const shopInfoElement = document.querySelector('.userinfo-from-shop');
-            const shopName = shopInfoElement ? this._formatShopName(shopInfoElement.textContent.trim()) : null;
+            const shopName = this.utils.getCurrentShopName();
             
             // 更新记忆管理器中的联系人信息
             memoryManager.updateContactInfo(chatId, contactName, shopName);
@@ -105,55 +100,7 @@ class ContactManager {
         }
     }
 
-    /**
-     * 格式化店铺名称
-     */
-    _formatShopName(rawName) {
-        if (!rawName) {
-            return null;
-        }
 
-        let formattedName = rawName;
-
-        // 移除城市前缀，例如 "上海 - "
-        formattedName = formattedName.replace(/^.+?\s*-\s*/, '');
-
-        // 移除括号前的多余空格
-        formattedName = formattedName.replace(/\s+\(/, '(');
-
-        // 将半角括号替换为全角括号
-        formattedName = formattedName.replace(/\(/g, '（').replace(/\)/g, '）');
-        
-        // 移除全角括号内部的所有空格
-        formattedName = formattedName.replace(/（([^）]+)）/g, (match, innerContent) => {
-            return `（${innerContent.replace(/\s/g, '')}）`;
-        });
-
-        const finalName = formattedName.trim();
-        console.log(`[ContactManager] 店铺名称格式化: "${rawName}" -> "${finalName}"`);
-
-        return finalName;
-    }
-
-    /**
-     * 查找所有元素（包括Shadow DOM）
-     */
-    findAllElements(selector, root) {
-        let elements = [];
-        try {
-            Array.prototype.push.apply(elements, root.querySelectorAll(selector));
-            const descendants = root.querySelectorAll('*');
-            for (const el of descendants) {
-                if (el.shadowRoot) {
-                    const nestedElements = this.findAllElements(selector, el.shadowRoot);
-                    Array.prototype.push.apply(elements, nestedElements);
-                }
-            }
-        } catch (e) {
-            // 忽略错误
-        }
-        return elements;
-    }
 
     /**
      * 开始点击联系人循环
@@ -212,7 +159,7 @@ class ContactManager {
         }
         
         try {
-            const contactElements = this.findAllElements(this.selectors.contactItems, document);
+            const contactElements = this.utils.findAllElements(this.utils.selectors.contactItems, document);
             
             if (contactElements.length === 0) {
                 this.sendErrorMessage('未找到联系人元素');
@@ -288,8 +235,7 @@ class ContactManager {
         }
         
         // 获取店铺名称
-        const shopInfoElement = document.querySelector('.userinfo-from-shop');
-        const shopName = shopInfoElement ? this._formatShopName(shopInfoElement.textContent.trim()) : null;
+        const shopName = this.utils.getCurrentShopName();
         
         return {
             name: name,
@@ -361,19 +307,10 @@ class ContactManager {
     }
 
     /**
-     * 发送店铺信息更新
+     * 发送店铺信息更新 (委托给工具类)
      */
     sendShopInfoUpdate(shopName) {
-        try {
-            if (shopName) {
-                chrome.runtime.sendMessage({
-                    type: 'shopInfoUpdate',
-                    shopName: shopName
-                });
-            }
-        } catch (error) {
-            console.error('[ContactManager] 发送店铺信息更新错误:', error);
-        }
+        this.utils.sendShopInfoUpdate(shopName);
     }
 
     /**
