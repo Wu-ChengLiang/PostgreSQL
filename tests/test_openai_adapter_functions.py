@@ -19,7 +19,7 @@ class TestOpenAIAdapterFunctions:
         """创建模拟配置"""
         return ModelConfig(
             provider=AIProvider.OPENAI,
-            model_name="gpt-4o-mini",
+            model_name="gpt-4o",
             api_key="test-key",
             base_url="https://api.openai.com/v1",
             timeout=30,
@@ -145,7 +145,7 @@ class TestOpenAIAdapterFunctions:
             "id": "chatcmpl-123",
             "object": "chat.completion",
             "created": 1677652288,
-            "model": "gpt-4o-mini",
+            "model": "gpt-4o",
             "choices": [{
                 "index": 0,
                 "message": {

@@ -89,7 +89,7 @@ class AIConfig:
         if openai_key:
             self.models[AIProvider.OPENAI] = ModelConfig(
                 provider=AIProvider.OPENAI,
-                model_name=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                model_name=os.getenv("OPENAI_MODEL", "gpt-4o"),
                 api_key=openai_key,
                 base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai-next.com/v1"),
                 max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "1000")),

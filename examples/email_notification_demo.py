@@ -165,7 +165,7 @@ async def demo_function_call_integration():
     # 创建模拟配置
     mock_config = ModelConfig(
         provider="openai",
-        model_name="gpt-3.5-turbo", 
+        model_name="gpt-4o", 
         api_key="test-key",
         base_url="https://api.openai.com/v1"
     )

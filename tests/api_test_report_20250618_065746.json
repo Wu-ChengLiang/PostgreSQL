@@ -1,0 +1,988 @@
+{
+  "test_summary": {
+    "total_tests": 7,
+    "successful_tests": 7,
+    "failed_tests": 0,
+    "success_rate": "100.0%",
+    "duration_seconds": 0.280381,
+    "start_time": "2025-06-18T06:57:46.029825",
+    "end_time": "2025-06-18T06:57:46.310206"
+  },
+  "test_results": {
+    "get_stores": {
+      "success": true,
+      "api_name": "get_stores",
+      "description": "获取所有门店列表信息，包括门店名称、地址、营业时间、技师数量等",
+      "data": [
+        {
+          "id": 31,
+          "name": "名医堂·测试店铺（emagen）",
+          "address": "测试地址",
+          "phone": "",
+          "business_hours": "9:00-22:00",
+          "status": "active",
+          "manager_name": "测试店长",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-17 06:25:33",
+          "therapist_count": 14
+        },
+        {
+          "id": 12,
+          "name": "名医堂·肩颈腰腿特色调理（港汇店）",
+          "address": "上海市徐汇区港汇广场",
+          "phone": "021-64234567",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 2
+        },
+        {
+          "id": 24,
+          "name": "名医堂·颈肩腰腿特色调理（世纪公园店）",
+          "address": "上海市浦东新区世纪公园",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 4
+        },
+        {
+          "id": 29,
+          "name": "名医堂·颈肩腰腿特色调理（东方路店）",
+          "address": "上海市浦东新区东方路",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 7
+        },
+        {
+          "id": 25,
+          "name": "名医堂·颈肩腰腿特色调理（丰庄店）",
+          "address": "上海市丰庄",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 3
+        },
+        {
+          "id": 15,
+          "name": "名医堂·颈肩腰腿特色调理（五角场万达店）",
+          "address": "上海市杨浦区五角场万达广场",
+          "phone": "021-65567890",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 3
+        },
+        {
+          "id": 26,
+          "name": "名医堂·颈肩腰腿特色调理（仙霞路店）",
+          "address": "上海市长宁区仙霞路",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 5
+        },
+        {
+          "id": 13,
+          "name": "名医堂·颈肩腰腿特色调理（兰溪路店）",
+          "address": "上海市普陀区兰溪路",
+          "phone": "021-62345678",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 3
+        },
+        {
+          "id": 2,
+          "name": "名医堂·颈肩腰腿特色调理（关山路店）",
+          "address": "上海市浦东新区关山路",
+          "phone": "021-58234567",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 9
+        },
+        {
+          "id": 16,
+          "name": "名医堂·颈肩腰腿特色调理（国顺店）",
+          "address": "上海市杨浦区国顺路",
+          "phone": "021-65678901",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 6
+        },
+        {
+          "id": 1,
+          "name": "名医堂·颈肩腰腿特色调理（宜山路店）",
+          "address": "上海市徐汇区宜山路",
+          "phone": "021-64123456",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 4
+        },
+        {
+          "id": 3,
+          "name": "名医堂·颈肩腰腿特色调理（巨峰路店）",
+          "address": "上海市宝山区巨峰路",
+          "phone": "021-56345678",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 5
+        },
+        {
+          "id": 20,
+          "name": "名医堂·颈肩腰腿特色调理（康桥店）",
+          "address": "上海市浦东新区康桥",
+          "phone": "021-58012345",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 4
+        },
+        {
+          "id": 9,
+          "name": "名医堂·颈肩腰腿特色调理（斜土路店）",
+          "address": "上海市徐汇区斜土路",
+          "phone": "021-64901234",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 4
+        },
+        {
+          "id": 19,
+          "name": "名医堂·颈肩腰腿特色调理（春申路店）",
+          "address": "上海市闵行区春申路",
+          "phone": "021-64901234",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 4
+        },
+        {
+          "id": 7,
+          "name": "名医堂·颈肩腰腿特色调理（武宁南路店）",
+          "address": "上海市普陀区武宁南路",
+          "phone": "021-62789012",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 4
+        },
+        {
+          "id": 21,
+          "name": "名医堂·颈肩腰腿特色调理（汇融天地店）",
+          "address": "上海市浦东新区汇融天地",
+          "phone": "021-58123456",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 3
+        },
+        {
+          "id": 22,
+          "name": "名医堂·颈肩腰腿特色调理（浦三路店）",
+          "address": "上海市浦东新区浦三路",
+          "phone": "021-58234567",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 4
+        },
+        {
+          "id": 28,
+          "name": "名医堂·颈肩腰腿特色调理（浦东大道店）",
+          "address": "上海市浦东新区浦东大道",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 4
+        },
+        {
+          "id": 17,
+          "name": "名医堂·颈肩腰腿特色调理（漕东里店）",
+          "address": "上海市徐汇区漕东里",
+          "phone": "021-64789012",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 5
+        },
+        {
+          "id": 27,
+          "name": "名医堂·颈肩腰腿特色调理（爱琴海店）",
+          "address": "上海市爱琴海购物公园",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 5
+        },
+        {
+          "id": 23,
+          "name": "名医堂·颈肩腰腿特色调理（聚丰园路店）",
+          "address": "上海市宝山区聚丰园路",
+          "phone": "021-56345678",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 3
+        },
+        {
+          "id": 14,
+          "name": "名医堂·颈肩腰腿特色调理（莘庄店）",
+          "address": "上海市闵行区莘庄",
+          "phone": "021-64456789",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 7
+        },
+        {
+          "id": 8,
+          "name": "名医堂·颈肩腰腿特色调理（豫园店）",
+          "address": "上海市黄浦区豫园",
+          "phone": "021-63890123",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 6
+        },
+        {
+          "id": 5,
+          "name": "名医堂·颈肩腰腿特色调理（长江西路店）",
+          "address": "上海市普陀区长江西路",
+          "phone": "021-62567890",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 5
+        },
+        {
+          "id": 4,
+          "name": "名医堂·颈肩腰腿特色调理（隆昌路店）",
+          "address": "上海市杨浦区隆昌路",
+          "phone": "021-65456789",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 8
+        },
+        {
+          "id": 30,
+          "name": "名医堂·颈肩腰腿特色调理（静安寺店）",
+          "address": "上海市静安区静安寺",
+          "phone": "",
+          "business_hours": "9:00-21:00",
+          "status": "active",
+          "manager_name": "",
+          "created_at": "2025-06-16 07:28:44",
+          "updated_at": "2025-06-16 07:28:44",
+          "therapist_count": 5
+        },
+        {
+          "id": 18,
+          "name": "名医堂·颈肩腰腿特色调理（高岛屋店）",
+          "address": "上海市长宁区高岛屋",
+          "phone": "021-62890123",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:23",
+          "updated_at": "2025-06-16 04:28:23",
+          "therapist_count": 7
+        },
+        {
+          "id": 6,
+          "name": "名医堂·颈肩腰腿特色调理（龙华路店）",
+          "address": "上海市徐汇区龙华路",
+          "phone": "021-64678901",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 3
+        },
+        {
+          "id": 10,
+          "name": "名医堂妙康中医·推拿正骨·针灸·艾灸",
+          "address": "上海市静安区南京西路",
+          "phone": "021-62012345",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 8
+        },
+        {
+          "id": 11,
+          "name": "名医堂永康中医·推拿正骨·针灸·艾灸",
+          "address": "上海市徐汇区永康路",
+          "phone": "021-64123456",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 04:28:22",
+          "updated_at": "2025-06-16 04:28:22",
+          "therapist_count": 8
+        },
+        {
+          "id": 32,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:22:59",
+          "updated_at": "2025-06-16 12:54:57",
+          "therapist_count": 0
+        },
+        {
+          "id": 33,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:24:57",
+          "updated_at": "2025-06-16 11:24:57",
+          "therapist_count": 0
+        },
+        {
+          "id": 34,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:25:28",
+          "updated_at": "2025-06-16 11:25:28",
+          "therapist_count": 0
+        },
+        {
+          "id": 35,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:27:54",
+          "updated_at": "2025-06-16 11:27:54",
+          "therapist_count": 0
+        },
+        {
+          "id": 36,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:30:21",
+          "updated_at": "2025-06-16 11:30:21",
+          "therapist_count": 0
+        },
+        {
+          "id": 37,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:31:19",
+          "updated_at": "2025-06-16 11:31:19",
+          "therapist_count": 0
+        },
+        {
+          "id": 38,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 11:35:37",
+          "updated_at": "2025-06-16 11:35:37",
+          "therapist_count": 0
+        },
+        {
+          "id": 39,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 13:02:48",
+          "updated_at": "2025-06-16 13:02:48",
+          "therapist_count": 0
+        },
+        {
+          "id": 40,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 13:09:57",
+          "updated_at": "2025-06-16 13:09:57",
+          "therapist_count": 0
+        },
+        {
+          "id": 41,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-16 13:11:06",
+          "updated_at": "2025-06-16 13:11:06",
+          "therapist_count": 0
+        },
+        {
+          "id": 42,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-17 03:04:23",
+          "updated_at": "2025-06-17 03:04:23",
+          "therapist_count": 0
+        },
+        {
+          "id": 43,
+          "name": "测试门店",
+          "address": "测试地址123号",
+          "phone": "13800138000",
+          "business_hours": "09:00-21:00",
+          "status": "active",
+          "manager_name": null,
+          "created_at": "2025-06-17 06:25:33",
+          "updated_at": "2025-06-17 06:25:33",
+          "therapist_count": 0
+        }
+      ],
+      "count": 43,
+      "message": "成功获取 43 个门店信息"
+    },
+    "search_therapists": {
+      "success": true,
+      "api_name": "search_therapists",
+      "description": "搜索技师信息，支持按门店ID、专长关键词、最少从业年限等条件搜索",
+      "data": [
+        {
+          "condition": "搜索所有技师",
+          "params": {},
+          "count": 20,
+          "data": [
+            {
+              "id": 190,
+              "name": "马老师",
+              "position": "调理师",
+              "years_of_experience": 222,
+              "specialties": [
+                "工程师"
+              ],
+              "honors": null,
+              "store": {
+                "id": 31,
+                "name": "名医堂·测试店铺（emagen）",
+                "address": "测试地址"
+              }
+            },
+            {
+              "id": 84,
+              "name": "周龙标",
+              "position": "医士",
+              "years_of_experience": 66,
+              "specialties": [
+                "中医内科",
+                "中医不孕不育",
+                "中医妇科",
+                "中医康复科",
+                "中医肿瘤科"
+              ],
+              "honors": null,
+              "store": {
+                "id": 11,
+                "name": "名医堂永康中医·推拿正骨·针灸·艾灸",
+                "address": "上海市徐汇区永康路"
+              }
+            }
+          ]
+        },
+        {
+          "condition": "按门店ID搜索",
+          "params": {
+            "store_id": 1
+          },
+          "count": 4,
+          "data": [
+            {
+              "id": 28,
+              "name": "刘老师",
+              "position": "调理师",
+              "years_of_experience": 16,
+              "specialties": [
+                "经络疏通",
+                "艾灸",
+                "颈肩腰腿痛"
+              ],
+              "honors": null,
+              "store": {
+                "id": 1,
+                "name": "名医堂·颈肩腰腿特色调理（宜山路店）",
+                "address": "上海市徐汇区宜山路"
+              }
+            },
+            {
+              "id": 29,
+              "name": "冯老师",
+              "position": "调理师",
+              "years_of_experience": 15,
+              "specialties": [
+                "按摩",
+                "经络疏通",
+                "艾灸"
+              ],
+              "honors": null,
+              "store": {
+                "id": 1,
+                "name": "名医堂·颈肩腰腿特色调理（宜山路店）",
+                "address": "上海市徐汇区宜山路"
+              }
+            }
+          ]
+        },
+        {
+          "condition": "按技师姓名搜索",
+          "params": {
+            "therapist_name": "老师"
+          },
+          "count": 20,
+          "data": [
+            {
+              "id": 190,
+              "name": "马老师",
+              "position": "调理师",
+              "years_of_experience": 222,
+              "specialties": [
+                "工程师"
+              ],
+              "honors": null,
+              "store": {
+                "id": 31,
+                "name": "名医堂·测试店铺（emagen）",
+                "address": "测试地址"
+              }
+            },
+            {
+              "id": 84,
+              "name": "周龙标",
+              "position": "医士",
+              "years_of_experience": 66,
+              "specialties": [
+                "中医内科",
+                "中医不孕不育",
+                "中医妇科",
+                "中医康复科",
+                "中医肿瘤科"
+              ],
+              "honors": null,
+              "store": {
+                "id": 11,
+                "name": "名医堂永康中医·推拿正骨·针灸·艾灸",
+                "address": "上海市徐汇区永康路"
+              }
+            }
+          ]
+        }
+      ],
+      "message": "技师搜索测试完成"
+    },
+    "get_therapist_schedule": {
+      "success": true,
+      "api_name": "get_therapist_schedule",
+      "description": "查询指定技师在指定日期的可用预约时间段和排班信息",
+      "data": [
+        {
+          "date": "2025-06-18",
+          "therapist_id": 190,
+          "therapist_name": "马老师",
+          "schedule_data": {
+            "therapist_id": 190,
+            "date": "2025-06-18",
+            "schedule": {
+              "date": "2025-06-18",
+              "available_times": [
+                "09:00",
+                "10:00",
+                "11:00",
+                "12:00",
+                "13:00",
+                "14:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "18:00",
+                "19:00",
+                "20:00"
+              ],
+              "business_hours": "9:00-21:00"
+            },
+            "available_times": [
+              "09:00",
+              "10:00",
+              "11:00",
+              "12:00",
+              "13:00",
+              "14:00",
+              "15:00",
+              "16:00",
+              "17:00",
+              "18:00",
+              "19:00",
+              "20:00"
+            ],
+            "booked_times": []
+          },
+          "available_times_count": 12,
+          "booked_times_count": 0
+        },
+        {
+          "date": "2025-06-19",
+          "therapist_id": 190,
+          "therapist_name": "马老师",
+          "schedule_data": {
+            "therapist_id": 190,
+            "date": "2025-06-19",
+            "schedule": {
+              "date": "2025-06-19",
+              "available_times": [
+                "09:00",
+                "10:00",
+                "11:00",
+                "12:00",
+                "13:00",
+                "14:00",
+                "15:00",
+                "16:00",
+                "17:00",
+                "18:00",
+                "19:00",
+                "20:00"
+              ],
+              "business_hours": "9:00-21:00"
+            },
+            "available_times": [
+              "09:00",
+              "10:00",
+              "11:00",
+              "12:00",
+              "13:00",
+              "14:00",
+              "15:00",
+              "16:00",
+              "17:00",
+              "18:00",
+              "19:00",
+              "20:00"
+            ],
+            "booked_times": []
+          },
+          "available_times_count": 12,
+          "booked_times_count": 0
+        }
+      ],
+      "message": "成功查询技师 马老师 的排班信息"
+    },
+    "get_user_appointments": {
+      "success": true,
+      "api_name": "get_user_appointments",
+      "description": "查看指定用户的所有预约列表，通过手机号查询",
+      "data": [
+        {
+          "phone": "19357509506",
+          "appointments_count": 2,
+          "appointments": [
+            {
+              "id": 31,
+              "therapist": {
+                "id": 55,
+                "name": "刘老师",
+                "position": "调理师"
+              },
+              "store": {
+                "id": 5,
+                "name": "名医堂·颈肩腰腿特色调理（长江西路店）",
+                "address": "上海市普陀区长江西路"
+              },
+              "appointment_date": "2025-06-20",
+              "appointment_time": "19:00",
+              "duration": 60,
+              "status": "cancelled",
+              "notes": null,
+              "created_at": "2025-06-17 07:05:01"
+            },
+            {
+              "id": 30,
+              "therapist": {
+                "id": 55,
+                "name": "刘老师",
+                "position": "调理师"
+              },
+              "store": {
+                "id": 5,
+                "name": "名医堂·颈肩腰腿特色调理（长江西路店）",
+                "address": "上海市普陀区长江西路"
+              },
+              "appointment_date": "2025-06-19",
+              "appointment_time": "14:00",
+              "duration": 60,
+              "status": "cancelled",
+              "notes": null,
+              "created_at": "2025-06-17 07:04:46"
+            }
+          ]
+        },
+        {
+          "phone": "13800138000",
+          "appointments_count": 1,
+          "appointments": [
+            {
+              "id": 1,
+              "therapist": {
+                "id": 27,
+                "name": "彭老师",
+                "position": "调理师"
+              },
+              "store": {
+                "id": 24,
+                "name": "名医堂·颈肩腰腿特色调理（世纪公园店）",
+                "address": "上海市浦东新区世纪公园"
+              },
+              "appointment_date": "2025-06-17",
+              "appointment_time": "14:00",
+              "duration": 60,
+              "status": "confirmed",
+              "notes": "测试预约数据",
+              "created_at": "2025-06-16 10:47:48"
+            }
+          ]
+        },
+        {
+          "phone": "18888888888",
+          "appointments_count": 0,
+          "appointments": []
+        }
+      ],
+      "message": "用户预约列表查询测试完成"
+    },
+    "create_smart_appointment": {
+      "success": true,
+      "api_name": "create_smart_appointment",
+      "description": "智能预约功能：支持自然语言模式和结构化数据模式创建预约",
+      "test_data": {
+        "therapist_name": "马老师",
+        "appointment_time": "15:30",
+        "customer_name": "测试用户",
+        "customer_phone": "19999999999",
+        "store_name": "名医堂·测试店铺（emagen）",
+        "appointment_date": "2025-06-19",
+        "notes": "API测试预约，请忽略"
+      },
+      "api_result": {
+        "success": true,
+        "data": {
+          "appointment_id": 39,
+          "confirmation_code": "APT20250618OYX3Z",
+          "matched_therapist": {
+            "id": 190,
+            "name": "马老师",
+            "position": "调理师",
+            "years_of_experience": 222,
+            "specialties": [
+              "工程师"
+            ],
+            "honors": null,
+            "store": {
+              "id": 31,
+              "name": "名医堂·测试店铺（emagen）",
+              "address": "测试地址"
+            }
+          },
+          "original_request": {
+            "therapist_name": "马老师",
+            "appointment_time": "15:30",
+            "customer_name": "测试用户",
+            "store_name": "名医堂·测试店铺（emagen）"
+          }
+        },
+        "message": "智能预约成功！技师: 马老师, 时间: 15:30, 客户: 测试用户"
+      },
+      "message": "智能预约测试完成"
+    },
+    "email_notifications": {
+      "success": true,
+      "api_name": "send_appointment_emails",
+      "description": "发送预约相关的邮件通知，包括给客户发送确认邮件和给技师发送新预约通知邮件",
+      "email_conversion_test": [
+        {
+          "phone": "19357509506",
+          "email": "19357509506@163.com",
+          "is_valid": true
+        },
+        {
+          "phone": "13800138000",
+          "email": "13800138000@163.com",
+          "is_valid": true
+        },
+        {
+          "phone": "invalid_phone",
+          "email": "invalid_phone@163.com",
+          "is_valid": true
+        }
+      ],
+      "template_test": {
+        "customer_email": {
+          "subject": "【预约确认】测试用户您的预约已确认",
+          "body_preview": "尊敬的测试用户，您好！\n\n您的预约已成功确认，详情如下：\n\n📋 预约信息：\n• 服务项目：颈肩腰腿痛调理\n• 预约日期：2025-06-19\n• 预约时间：15:30\n• 服务技师：测试技师\n• 服务门店：测试门店\n\n📞 温馨提示：\n• 请提前10分钟到达门店\n• 如需修改或取消预约，请及时联系我们\n• 感谢您的信任与支持！\n\n此邮件为系统自动发送，请勿直接回复。\n如有疑问请联系客服。\n\n2025..."
+        },
+        "therapist_email": {
+          "subject": "【新预约通知】测试技师，您有新的预约",
+          "body_preview": "亲爱的测试技师，您好！\n\n您有一个新的预约，请注意安排：\n\n👤 客户信息：\n• 客户姓名：测试用户\n• 联系电话：19357509506\n\n📋 预约详情：\n• 服务项目：颈肩腰腿痛调理\n• 预约日期：2025-06-19\n• 预约时间：15:30\n• 服务门店：测试门店\n• 备注信息：测试预约\n\n📝 注意事项：\n• 请提前准备相关服务用品\n• 如有时间冲突请及时联系管理员\n• 请确保按时到岗为客户..."
+        }
+      },
+      "message": "邮件通知功能测试完成"
+    },
+    "additional_apis": {
+      "success": true,
+      "api_name": "additional_apis",
+      "description": "测试其他辅助API功能",
+      "data": [
+        {
+          "api": "get_appointment_details",
+          "test_id": 1,
+          "success": true,
+          "data": {}
+        },
+        {
+          "api": "cancel_appointment",
+          "test_data": {
+            "appointment_id": 999999,
+            "phone": "19999999999"
+          },
+          "success": true,
+          "result": {
+            "success": false,
+            "error": "预约不存在或无权取消"
+          }
+        }
+      ],
+      "message": "辅助API测试完成"
+    }
+  },
+  "tested_apis": [
+    {
+      "name": "get_stores",
+      "description": "获取所有门店列表信息，包括门店名称、地址、营业时间、技师数量等"
+    },
+    {
+      "name": "search_therapists",
+      "description": "搜索技师信息，支持按门店ID、专长关键词、最少从业年限等条件搜索"
+    },
+    {
+      "name": "get_therapist_schedule",
+      "description": "查询指定技师在指定日期的可用预约时间段和排班信息"
+    },
+    {
+      "name": "get_user_appointments",
+      "description": "查看指定用户的所有预约列表，通过手机号查询"
+    },
+    {
+      "name": "create_smart_appointment",
+      "description": "智能预约功能：支持两种模式：1)自然语言模式-根据客户消息和上下文自动解析创建预约；2)结构化数据模式-直接使用解析好的预约信息创建预约"
+    },
+    {
+      "name": "send_appointment_emails",
+      "description": "发送预约相关的邮件通知，包括给客户发送确认邮件和给技师发送新预约通知邮件"
+    },
+    {
+      "name": "get_appointment_details",
+      "description": "获取指定预约的详细信息"
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "取消指定的预约，需要提供预约ID和用户电话进行身份验证"
+    }
+  ]
+}

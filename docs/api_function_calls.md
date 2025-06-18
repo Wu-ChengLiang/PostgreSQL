@@ -150,7 +150,7 @@ python -m pytest tests/test_database_service_integration.py -v
 
 ```env
 OPENAI_API_KEY=your-api-key
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-4o
 ```
 
 只有OpenAI适配器支持函数调用功能，其他适配器（如Zhipu、DeepSeek）暂不支持。

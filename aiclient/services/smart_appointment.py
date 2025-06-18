@@ -54,7 +54,7 @@ class NaturalLanguageParser:
         
         # 服务类型匹配
         self.service_patterns = [
-            r'(按摩|推拿|理疗|艾灸|拔罐|刮痧|足疗|调理)'
+            r'(调理|推拿理疗|艾灸|拔罐|刮痧|足疗)'
         ]
     
     def parse_therapist_name(self, text: str) -> Optional[str]:
@@ -261,16 +261,10 @@ class SmartAppointmentService:
         """
         try:
             # 调用数据库服务搜索技师
-            if hasattr(self.database_service, 'search_therapists'):
-                therapists = await self.database_service.search_therapists(
-                    store_name=store_name,
-                    therapist_name=therapist_name
-                )
-            else:
-                # 兼容旧版本API
-                therapists = await self.database_service.search_technicians(
-                    name=therapist_name
-                )
+            therapists = await self.database_service.search_therapists(
+                store_name=store_name,
+                therapist_name=therapist_name
+            )
             
             if therapists and len(therapists) > 0:
                 return therapists[0]
@@ -296,16 +290,13 @@ class SmartAppointmentService:
         """
         try:
             # 调用数据库服务查询技师排班
-            if hasattr(self.database_service, 'get_therapist_schedule'):
-                schedule = await self.database_service.get_therapist_schedule(
-                    therapist_id, appointment_date
-                )
-                
-                # 检查时间是否可用
-                available_times = schedule.get('available_times', [])
-                return appointment_time in available_times
+            schedule = await self.database_service.get_therapist_schedule(
+                therapist_id, appointment_date
+            )
             
-            return True  # 默认可用
+            # 检查时间是否可用
+            available_times = schedule.get('available_times', [])
+            return appointment_time in available_times
             
         except Exception as e:
             self.logger.error(f"检查可用性失败: {e}")
@@ -367,21 +358,8 @@ class SmartAppointmentService:
                 "notes": f"AI智能预约：{customer_message}"
             }
             
-            # 优先使用智能预约API，如果失败则使用传统方式
-            if hasattr(self.database_service, 'create_smart_appointment'):
-                appointment_result = await self.database_service.create_smart_appointment(smart_appointment_data)
-            else:
-                # 回退到传统预约方式
-                appointment_data = {
-                    "therapist_id": therapist["id"],
-                    "user_name": parse_result["customer_name"],
-                    "user_phone": parse_result["customer_phone"],
-                    "appointment_date": parse_result["appointment_date"],
-                    "appointment_time": parse_result["appointment_time"],
-                    "service_type": parse_result["service_type"],
-                    "notes": f"智能预约：{customer_message}"
-                }
-                appointment_result = await self.database_service.create_appointment(appointment_data)
+            # 使用智能预约API
+            appointment_result = await self.database_service.create_smart_appointment(smart_appointment_data)
             
             if not appointment_result.get("success"):
                 return {
@@ -390,26 +368,26 @@ class SmartAppointmentService:
                     "message": appointment_result.get("error", "未知错误")
                 }
             
-            # 5. 发送邮件通知
-            email_result = {"success": True, "message": "邮件发送跳过"}
+            # # 5. 发送邮件通知 (已注释)
+            # email_result = {"success": True, "message": "邮件发送已跳过"}
             
-            if self.email_service:
-                try:
-                    email_info = {
-                        "customer_name": parse_result["customer_name"],
-                        "customer_phone": parse_result["customer_phone"],
-                        "therapist_id": therapist["id"],
-                        "therapist_name": therapist["name"],
-                        "appointment_date": parse_result["appointment_date"],
-                        "appointment_time": parse_result["appointment_time"],
-                        "service_type": parse_result["service_type"],
-                        "store_name": parse_result["store_name"]
-                    }
-                    
-                    email_result = await self.email_service.send_appointment_notification_emails(email_info)
-                except Exception as e:
-                    self.logger.warning(f"邮件发送失败: {e}")
-                    email_result = {"success": False, "error": str(e)}
+            # if self.email_service:
+            #     try:
+            #         email_info = {
+            #             "customer_name": parse_result["customer_name"],
+            #             "customer_phone": parse_result["customer_phone"],
+            #             "therapist_id": therapist["id"],
+            #             "therapist_name": therapist["name"],
+            #             "appointment_date": parse_result["appointment_date"],
+            #             "appointment_time": parse_result["appointment_time"],
+            #             "service_type": parse_result["service_type"],
+            #             "store_name": parse_result["store_name"]
+            #         }
+            #         
+            #         email_result = await self.email_service.send_appointment_notification_emails(email_info)
+            #     except Exception as e:
+            #         self.logger.warning(f"邮件发送失败: {e}")
+            #         email_result = {"success": False, "error": str(e)}
             
             # 6. 返回结果
             appointment_id = appointment_result["data"].get("appointment_id") or appointment_result["data"].get("id")
@@ -420,7 +398,7 @@ class SmartAppointmentService:
                 "emails_sent": email_result.get("success", False),
                 "appointment_id": appointment_id,
                 "appointment_data": appointment_result["data"],
-                "email_result": email_result,
+                # "email_result": email_result,
                 "message": appointment_result.get("message") or f"AI智能预约成功！技师：{parse_result['therapist_name']}，时间：{parse_result['appointment_time']}"
             }
             

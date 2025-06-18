@@ -18,7 +18,7 @@ async def test_all_functions():
     # 创建配置
     config = ModelConfig(
         provider="openai",
-        model_name="gpt-4o-mini",
+        model_name="gpt-4o",
         api_key="test-key",  # 测试用，不需要真实的key
         base_url="https://api.openai.com/v1"
     )
