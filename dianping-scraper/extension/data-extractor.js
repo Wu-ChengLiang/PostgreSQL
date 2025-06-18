@@ -1,0 +1,290 @@
+/**
+ * 大众点评数据提取器 - 数据提取模块
+ * 负责页面数据的提取、处理和发送
+ */
+
+class DataExtractor {
+    constructor() {
+        this.extractedData = new Set();
+        this.observer = null;
+        
+        // 数据提取选择器
+        this.selectors = {
+            chatMessageList: '.text-message.normal-text, .rich-message, .text-message.shop-text',
+            tuanInfo: '.tuan',
+            contactItems: '.chat-list-item',
+        };
+    }
+
+    /**
+     * 检测页面类型
+     */
+    detectPageType() {
+        const url = window.location.href;
+        if (url.includes('dzim-main-pc') || document.querySelector('wujie-app')) {
+            return 'chat_page';
+        }
+        if (document.querySelector('.message-list') || document.querySelector('.text-message')) {
+            return 'chat_page';
+        }
+        return 'unknown';
+    }
+
+    /**
+     * 查找所有元素（包括Shadow DOM）
+     */
+    findAllElements(selector, root) {
+        let elements = [];
+        try {
+            Array.prototype.push.apply(elements, root.querySelectorAll(selector));
+            const descendants = root.querySelectorAll('*');
+            for (const el of descendants) {
+                if (el.shadowRoot) {
+                    const nestedElements = this.findAllElements(selector, el.shadowRoot);
+                    Array.prototype.push.apply(elements, nestedElements);
+                }
+            }
+        } catch (e) {
+            // 忽略错误
+        }
+        return elements;
+    }
+
+    /**
+     * 格式化店铺名称
+     */
+    formatShopName(rawName) {
+        if (!rawName) {
+            return null;
+        }
+
+        let formattedName = rawName;
+
+        // 移除城市前缀，例如 "上海 - "
+        formattedName = formattedName.replace(/^.+?\s*-\s*/, '');
+
+        // 移除括号前的多余空格
+        formattedName = formattedName.replace(/\s+\(/, '(');
+
+        // 将半角括号替换为全角括号
+        formattedName = formattedName.replace(/\(/g, '（').replace(/\)/g, '）');
+        
+        // 移除全角括号内部的所有空格
+        formattedName = formattedName.replace(/（([^）]+)）/g, (match, innerContent) => {
+            return `（${innerContent.replace(/\s/g, '')}）`;
+        });
+
+        const finalName = formattedName.trim();
+        console.log(`[DataExtractor] 店铺名称格式化: "${rawName}" -> "${finalName}"`);
+
+        return finalName;
+    }
+
+    /**
+     * 使用 MutationObserver 等待店铺名称出现
+     */
+    waitForShopNameWithObserver(timeout = 5000) {
+        return new Promise(resolve => {
+            const selector = '.userinfo-from-shop';
+
+            // 立即检查元素是否已存在
+            const existingElements = this.findAllElements(selector, document);
+            if (existingElements.length > 0 && existingElements[0].textContent.trim()) {
+                console.log('[DataExtractor] 店铺名称被立即找到 (Shadow DOM)');
+                const rawShopName = existingElements[0].textContent.trim();
+                resolve(this.formatShopName(rawShopName));
+                return;
+            }
+
+            const targetNode = document.body;
+            let timer = null;
+
+            const observer = new MutationObserver((mutationsList, obs) => {
+                const shopElements = this.findAllElements(selector, document);
+                if (shopElements.length > 0 && shopElements[0].textContent.trim()) {
+                    console.log('[DataExtractor] 通过 MutationObserver 找到店铺名称 (Shadow DOM)');
+                    const rawShopName = shopElements[0].textContent.trim();
+                    if (timer) clearTimeout(timer);
+                    obs.disconnect();
+                    resolve(this.formatShopName(rawShopName));
+                }
+            });
+
+            // 设置超时
+            timer = setTimeout(() => {
+                observer.disconnect();
+                console.warn(`[DataExtractor] 等待店铺名称超时 (${timeout}ms)`);
+                resolve(null);
+            }, timeout);
+
+            observer.observe(targetNode, { childList: true, subtree: true });
+            console.log('[DataExtractor] MutationObserver 已启动，等待店铺名称...');
+        });
+    }
+
+    /**
+     * 开始DOM观察
+     */
+    startObserving(memoryManager, sendDataCallback) {
+        this.observer = new MutationObserver(() => {
+            this.extractData(memoryManager, sendDataCallback);
+        });
+        this.observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    /**
+     * 停止DOM观察
+     */
+    stopObserving() {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+    }
+
+    /**
+     * 提取聊天消息
+     */
+    extractChatMessages(memoryManager) {
+        const messages = [];
+        const messageNodes = this.findAllElements(this.selectors.chatMessageList, document);
+        const memoryStatus = memoryManager.getMemoryStatus();
+
+        messageNodes.forEach((node, index) => {
+            const content = (node.innerText || node.textContent).trim();
+            
+            let messageType = '';
+            let prefix = '';
+            if (node.className.includes('shop-text')) {
+                messageType = 'shop';
+                prefix = '[商家] ';
+            } else if (node.className.includes('normal-text')) {
+                messageType = 'customer';
+                prefix = '[客户] ';
+            } else {
+                messageType = 'unknown';
+                prefix = '[未知] ';
+            }
+            
+            const prefixedContent = prefix + content;
+            const uniqueKey = `${content}_${messageType}`;
+
+            if (content && !this.extractedData.has(uniqueKey)) {
+                const messageData = {
+                    id: `msg_${Date.now()}_${index}`,
+                    type: 'chat_message',
+                    messageType: messageType,
+                    content: prefixedContent,
+                    originalContent: content,
+                    timestamp: Date.now(),
+                    chatId: memoryStatus.currentChatId,
+                    contactName: memoryStatus.combinedContactName
+                };
+                
+                messages.push(messageData);
+                this.extractedData.add(uniqueKey);
+                
+                // 根据消息类型添加到记忆
+                if (messageType === 'customer') {
+                    memoryManager.addToMemory(messageData);
+                } else {
+                    memoryManager.addToMemoryWithoutTrigger(messageData);
+                }
+            }
+        });
+        
+        if(messages.length > 0) {
+            console.log(`[DataExtractor] 提取 ${messages.length} 条新消息`);
+        }
+
+        return { messages, count: messages.length };
+    }
+
+    /**
+     * 提取团购信息
+     */
+    extractTuanInfo() {
+        const tuanInfoList = [];
+        const tuanNodes = this.findAllElements(this.selectors.tuanInfo, document);
+
+        tuanNodes.forEach((node, index) => {
+            try {
+                const nameNode = node.querySelector('.tuan-name');
+                const salePriceNode = node.querySelector('.sale-price');
+                const originalPriceNode = node.querySelector('.tuan-price .gray-price > span, .tuan-price > .gray > .gray-price:not(.left-dis)');
+                const imageNode = node.querySelector('.tuan-img img');
+
+                const name = nameNode ? nameNode.innerText.trim() : '';
+                const salePrice = salePriceNode ? salePriceNode.innerText.trim() : '';
+                
+                const uniqueKey = `tuan_${name}_${salePrice}`;
+
+                if (name && salePrice && !this.extractedData.has(uniqueKey)) {
+                    const originalPrice = originalPriceNode ? originalPriceNode.innerText.trim() : '';
+                    const image = imageNode ? imageNode.src : '';
+
+                    tuanInfoList.push({
+                        id: `tuan_${Date.now()}_${index}`,
+                        type: 'tuan_info',
+                        content: {
+                            name,
+                            salePrice,
+                            originalPrice,
+                            image,
+                        }
+                    });
+                    this.extractedData.add(uniqueKey);
+                }
+            } catch (error) {
+                console.error('[DataExtractor] 提取团购信息错误:', error);
+            }
+        });
+        
+        if(tuanInfoList.length > 0) {
+            console.log(`[DataExtractor] 提取 ${tuanInfoList.length} 条团购信息`);
+        }
+
+        return { tuanInfo: tuanInfoList, count: tuanInfoList.length };
+    }
+
+    /**
+     * 执行完整的数据提取
+     */
+    extractData(memoryManager, sendDataCallback) {
+        try {
+            const allExtractedData = [];
+            
+            const { messages } = this.extractChatMessages(memoryManager);
+            if (messages.length > 0) {
+                allExtractedData.push(...messages);
+            }
+            
+            const { tuanInfo } = this.extractTuanInfo();
+            if (tuanInfo.length > 0) {
+                allExtractedData.push(...tuanInfo);
+            }
+            
+            if (allExtractedData.length > 0 && sendDataCallback) {
+                sendDataCallback({
+                    type: 'dianping_data',
+                    payload: {
+                        pageType: this.detectPageType(),
+                        data: allExtractedData
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('[DataExtractor] 数据提取错误:', error);
+        }
+    }
+
+    /**
+     * 清空已提取数据缓存
+     */
+    clearExtractedData() {
+        this.extractedData.clear();
+    }
+}
+
+// 导出到全局
+window.DataExtractor = DataExtractor; 

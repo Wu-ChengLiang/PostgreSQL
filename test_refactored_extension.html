@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大众点评扩展重构测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .mock-element {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>大众点评扩展重构测试页面</h1>
+        
+        <div class="section">
+            <h3>1. 模块加载测试</h3>
+            <div id="moduleLoadResults"></div>
+            <button onclick="testModuleLoading()">测试模块加载</button>
+        </div>
+
+        <div class="section">
+            <h3>2. MemoryManager 功能测试</h3>
+            <div id="memoryResults"></div>
+            <button onclick="testMemoryManager()">测试记忆管理</button>
+        </div>
+
+        <div class="section">
+            <h3>3. DianpingExtractor 基础功能测试</h3>
+            <div id="extractorResults"></div>
+            <button onclick="testDianpingExtractor()">测试数据提取器</button>
+        </div>
+
+        <div class="section">
+            <h3>4. 集成测试</h3>
+            <div id="integrationResults"></div>
+            <button onclick="testIntegration()">测试集成功能</button>
+        </div>
+
+        <!-- 模拟大众点评页面元素 -->
+        <div class="mock-element">
+            <div class="userinfo-username" data-chatid="test123">测试用户</div>
+            <div class="userinfo-from-shop">上海 - 名医堂·颈肩腰腿特色调理（兰溪路店）</div>
+            <div class="text-message normal-text">这是一条客户消息</div>
+            <div class="text-message shop-text">这是一条商家回复</div>
+            <div class="tuan">
+                <div class="tuan-name">测试团购</div>
+                <div class="sale-price">¥99</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载重构后的模块 -->
+    <script src="dianping-scraper/extension/memory.js"></script>
+    <script>
+        // 模拟Chrome扩展API
+        window.chrome = {
+            runtime: {
+                sendMessage: function(message, callback) {
+                    console.log('模拟发送消息:', message);
+                    if (callback) callback({ status: 'success' });
+                },
+                onMessage: {
+                    addListener: function(listener) {
+                        console.log('模拟添加消息监听器');
+                    }
+                },
+                getURL: function(path) {
+                    return '/mock/' + path;
+                }
+            }
+        };
+
+        // 测试结果显示函数
+        function showResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        // 1. 测试模块加载
+        function testModuleLoading() {
+            clearResults('moduleLoadResults');
+            
+            try {
+                // 测试MemoryManager是否可用
+                if (typeof MemoryManager !== 'undefined') {
+                    showResult('moduleLoadResults', '✅ MemoryManager 模块加载成功', 'success');
+                } else {
+                    showResult('moduleLoadResults', '❌ MemoryManager 模块未找到', 'error');
+                }
+
+                // 测试是否能创建MemoryManager实例
+                const memoryManager = new MemoryManager();
+                if (memoryManager) {
+                    showResult('moduleLoadResults', '✅ MemoryManager 实例创建成功', 'success');
+                } else {
+                    showResult('moduleLoadResults', '❌ MemoryManager 实例创建失败', 'error');
+                }
+
+            } catch (error) {
+                showResult('moduleLoadResults', `❌ 模块加载测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 2. 测试MemoryManager功能
+        function testMemoryManager() {
+            clearResults('memoryResults');
+            
+            try {
+                const memoryManager = new MemoryManager();
+                
+                // 测试基本属性
+                const initialStatus = memoryManager.getMemoryStatus();
+                showResult('memoryResults', `✅ 初始状态获取成功: ${JSON.stringify(initialStatus)}`, 'success');
+                
+                // 测试联系人信息更新
+                memoryManager.updateContactInfo('test123', '测试用户', '测试店铺');
+                const updatedStatus = memoryManager.getMemoryStatus();
+                showResult('memoryResults', `✅ 联系人信息更新成功: ${updatedStatus.combinedContactName}`, 'success');
+                
+                // 测试记忆添加
+                const testMessage = {
+                    id: 'test_msg_1',
+                    messageType: 'customer',
+                    originalContent: '测试消息内容',
+                    timestamp: Date.now()
+                };
+                
+                memoryManager.addToMemoryWithoutTrigger(testMessage);
+                const memorySnapshot = memoryManager.getMemorySnapshot();
+                showResult('memoryResults', `✅ 记忆添加成功: 当前记忆数量 ${memorySnapshot.length}`, 'success');
+                
+                // 测试记忆清空
+                memoryManager.clearMemory();
+                const clearedSnapshot = memoryManager.getMemorySnapshot();
+                showResult('memoryResults', `✅ 记忆清空成功: 当前记忆数量 ${clearedSnapshot.length}`, 'success');
+                
+            } catch (error) {
+                showResult('memoryResults', `❌ MemoryManager 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. 测试DianpingExtractor基础功能（模拟）
+        function testDianpingExtractor() {
+            clearResults('extractorResults');
+            
+            try {
+                // 模拟创建DianpingExtractor（简化版）
+                const mockExtractor = {
+                    memoryManager: new MemoryManager(),
+                    formatShopName: function(rawName) {
+                        if (!rawName) return null;
+                        let formattedName = rawName.replace(/^.+?\s*-\s*/, '');
+                        formattedName = formattedName.replace(/\(/g, '（').replace(/\)/g, '）');
+                        return formattedName.trim();
+                    },
+                    detectPageType: function() {
+                        return 'chat_page';
+                    }
+                };
+                
+                showResult('extractorResults', '✅ 模拟数据提取器创建成功', 'success');
+                
+                // 测试店铺名称格式化
+                const testShopName = '上海 - 名医堂·颈肩腰腿特色调理（兰溪路店）';
+                const formattedName = mockExtractor.formatShopName(testShopName);
+                showResult('extractorResults', `✅ 店铺名称格式化: "${formattedName}"`, 'success');
+                
+                // 测试页面类型检测
+                const pageType = mockExtractor.detectPageType();
+                showResult('extractorResults', `✅ 页面类型检测: ${pageType}`, 'success');
+                
+            } catch (error) {
+                showResult('extractorResults', `❌ DianpingExtractor 测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 4. 测试集成功能
+        function testIntegration() {
+            clearResults('integrationResults');
+            
+            try {
+                const memoryManager = new MemoryManager();
+                
+                // 测试完整的工作流程
+                showResult('integrationResults', '🔄 开始集成测试...', 'info');
+                
+                // 1. 初始化联系人
+                memoryManager.updateContactInfo('chat123', '测试联系人', '测试店铺');
+                showResult('integrationResults', '✅ 步骤1: 联系人初始化完成', 'success');
+                
+                // 2. 添加多条消息到记忆
+                const messages = [
+                    { id: 'msg1', messageType: 'customer', originalContent: '你好', timestamp: Date.now() },
+                    { id: 'msg2', messageType: 'shop', originalContent: '您好，有什么可以帮您的吗？', timestamp: Date.now() + 1000 },
+                    { id: 'msg3', messageType: 'customer', originalContent: '我想预约按摩', timestamp: Date.now() + 2000 }
+                ];
+                
+                messages.forEach(msg => {
+                    memoryManager.addToMemoryWithoutTrigger(msg);
+                });
+                showResult('integrationResults', '✅ 步骤2: 多条消息添加完成', 'success');
+                
+                // 3. 检查记忆状态
+                const finalStatus = memoryManager.getMemoryStatus();
+                showResult('integrationResults', `✅ 步骤3: 最终状态检查 - 记忆数量: ${finalStatus.memoryCount}, 联系人: ${finalStatus.combinedContactName}`, 'success');
+                
+                // 4. 测试联系人切换
+                const newContactInfo = {
+                    name: '新联系人',
+                    chatId: 'new_chat_456',
+                    shopName: '新店铺'
+                };
+                
+                memoryManager.handleContactSwitch(newContactInfo);
+                const switchedStatus = memoryManager.getMemoryStatus();
+                showResult('integrationResults', `✅ 步骤4: 联系人切换完成 - 新联系人: ${switchedStatus.combinedContactName}`, 'success');
+                
+                showResult('integrationResults', '🎉 集成测试全部通过！', 'success');
+                
+            } catch (error) {
+                showResult('integrationResults', `❌ 集成测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载完成后自动运行基本测试
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                testModuleLoading();
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

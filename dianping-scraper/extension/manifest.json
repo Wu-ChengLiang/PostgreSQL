@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "大众点评数据提取器",
-    "description": "从大众点评网站提取数据并发送到本地服务器",
-    "version": "1.0.0",
+    "name": "大众点评AGENT智能体",
+    "description": "从大众点评网站提取数据并发送到本地服务器 - 模块化版本",
+    "version": "1.1.0",
     "background": {
         "service_worker": "background.js"
     },
@@ -28,7 +28,12 @@
     "content_scripts": [
         {
             "matches": ["*://*.dianping.com/*"],
-            "js": ["content.js"],
+            "js": [
+                "memory.js",
+                "data-extractor.js",
+                "contact-manager.js", 
+                "content.js"
+            ],
             "css": ["popup.css"],
             "all_frames": true,
             "run_at": "document_end"
