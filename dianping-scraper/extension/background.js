@@ -105,7 +105,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                  return true;
             }
             console.log(`[Background] 停止提取 tab ${tabId}`);
-            chrome.tabs.sendMessage(tabId, { type: 'stopExtraction' }, (response) => {
+            // 同时发送停止提取和停止点击联系人的消息，确保所有活动都停止
+            chrome.tabs.sendMessage(tabId, { type: 'stopExtraction' });
+            chrome.tabs.sendMessage(tabId, { type: 'stopClickContacts' }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.error('[Background] 停止提取错误:', chrome.runtime.lastError.message);
                     sendResponse({ status: 'error', message: chrome.runtime.lastError.message });
