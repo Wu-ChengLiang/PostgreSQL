@@ -319,7 +319,12 @@ class SmartAppointmentService:
             parse_result = await self.parse_appointment_request(customer_message, context_info)
             
             if not parse_result["success"]:
-                return parse_result
+                return {
+                    "success": False,
+                    "error": "信息解析失败",
+                    "message": "请提供完整的预约信息，包括技师姓名、预约时间等",
+                    "suggestion": "请说明您想预约哪位技师，什么时间"
+                }
             
             # 2. 查找技师
             therapist = await self.find_therapist(
@@ -330,29 +335,17 @@ class SmartAppointmentService:
             if not therapist:
                 return {
                     "success": False,
-                    "error": "未找到指定的技师",
-                    "message": f"未找到技师：{parse_result['therapist_name']}"
+                    "error": "技师不存在",
+                    "message": f"很抱歉，没有找到{parse_result['therapist_name']}技师",
+                    "suggestion": "请检查技师姓名是否正确，或者选择其他技师"
                 }
             
-            # 3. 检查可用性
-            is_available = await self.check_availability(
-                therapist["id"],
-                parse_result["appointment_date"],
-                parse_result["appointment_time"]
-            )
-            
-            if not is_available:
-                return {
-                    "success": False,
-                    "error": "该时间段不可用",
-                    "message": f"技师{parse_result['therapist_name']}在{parse_result['appointment_time']}不可用"
-                }
-            
-            # 4. 创建智能预约 - 使用简化的智能预约API
+            # 3. 创建智能预约 - 直接调用API，让API处理时间冲突
             smart_appointment_data = {
                 "therapist_name": parse_result["therapist_name"],
                 "appointment_time": parse_result["appointment_time"],
                 "customer_name": parse_result["customer_name"],
+                "customer_phone": parse_result["customer_phone"],
                 "store_name": parse_result["store_name"],
                 "appointment_date": parse_result["appointment_date"],
                 "notes": f"AI智能预约：{customer_message}"
@@ -362,11 +355,47 @@ class SmartAppointmentService:
             appointment_result = await self.database_service.create_smart_appointment(smart_appointment_data)
             
             if not appointment_result.get("success"):
-                return {
-                    "success": False,
-                    "error": "预约创建失败",
-                    "message": appointment_result.get("error", "未知错误")
-                }
+                # 解析具体的错误信息
+                error_message = appointment_result.get("error", "")
+                
+                if "已被预约" in error_message or "时间段已被预约" in error_message:
+                    return {
+                        "success": False,
+                        "error": "时间冲突",
+                        "message": f"{parse_result['therapist_name']}在{parse_result['appointment_time']}已经有安排了",
+                        "suggestion": f"建议您选择{parse_result['therapist_name']}的其他时间，或者选择同门店的其他技师",
+                        "therapist_name": parse_result["therapist_name"],
+                        "requested_time": parse_result["appointment_time"]
+                    }
+                elif "技师不存在" in error_message:
+                    return {
+                        "success": False,
+                        "error": "技师信息错误",
+                        "message": f"很抱歉，{parse_result['therapist_name']}目前不在我们门店",
+                        "suggestion": "请选择其他技师，我可以为您推荐同门店的其他优秀技师"
+                    }
+                elif "门店不存在" in error_message:
+                    return {
+                        "success": False,
+                        "error": "门店信息错误",
+                        "message": "门店信息有误",
+                        "suggestion": "请确认您要预约的门店信息"
+                    }
+                elif "营业时间" in error_message:
+                    return {
+                        "success": False,
+                        "error": "营业时间限制",
+                        "message": f"{parse_result['appointment_time']}不在营业时间内",
+                        "suggestion": "请选择营业时间内的时段（通常为9:00-21:00）"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": "预约处理失败",
+                        "message": "预约暂时无法完成，可能是系统繁忙",
+                        "suggestion": "请稍后重试，或者选择其他时间段",
+                        "details": error_message
+                    }
             
             # # 5. 发送邮件通知 (已注释)
             # email_result = {"success": True, "message": "邮件发送已跳过"}
@@ -398,14 +427,21 @@ class SmartAppointmentService:
                 "emails_sent": email_result.get("success", False),
                 "appointment_id": appointment_id,
                 "appointment_data": appointment_result["data"],
-                # "email_result": email_result,
-                "message": appointment_result.get("message") or f"AI智能预约成功！技师：{parse_result['therapist_name']}，时间：{parse_result['appointment_time']}"
+                "message": f"预约成功！{parse_result['therapist_name']}，{parse_result['appointment_date']} {parse_result['appointment_time']}",
+                "confirmation_details": {
+                    "therapist_name": parse_result["therapist_name"],
+                    "appointment_date": parse_result["appointment_date"],
+                    "appointment_time": parse_result["appointment_time"],
+                    "customer_name": parse_result["customer_name"]
+                }
             }
             
         except Exception as e:
             self.logger.error(f"智能预约创建失败: {e}")
             return {
                 "success": False,
-                "error": str(e),
-                "message": "智能预约创建失败"
+                "error": "系统错误",
+                "message": "预约系统暂时不可用",
+                "suggestion": "请稍后重试，或联系客服协助处理",
+                "details": str(e)
             } 
