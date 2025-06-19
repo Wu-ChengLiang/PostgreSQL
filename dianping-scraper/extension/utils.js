@@ -77,7 +77,7 @@ window.DianpingUtils = {
         chatMessageList: '.text-message.normal-text, .rich-message, .text-message.shop-text',
         tuanInfo: '.tuan',
         contactItems: '.chat-list-item',
-        shopInfo: '.userinfo-from-shop, .shop-title, .shop-name, [class*="shop"], [class*="title"]'
+        shopInfo: '.userinfo-from-shop'
     },
 
     /**
@@ -86,46 +86,17 @@ window.DianpingUtils = {
     getCurrentShopName() {
         console.log('[Utils] 正在查找店铺名称...');
         
-        // 尝试多种选择器
-        const selectors = [
-            '.userinfo-from-shop',
-            '.shop-title',
-            '.shop-name', 
-            '[class*="shop-name"]',
-            '[class*="shopName"]',
-            '.j_shop_name',
-            '.title',
-            'h1',
-            'h2'
-        ];
-        
-        let shopInfoElement = null;
-        let usedSelector = '';
-        
-        for (const selector of selectors) {
-            const elements = this.findAllElements(selector, document);
-            if (elements.length > 0) {
-                for (const element of elements) {
-                    const text = element.textContent.trim();
-                    if (text && text.length > 2 && text.length < 100) {
-                        shopInfoElement = element;
-                        usedSelector = selector;
-                        console.log(`[Utils] 使用选择器 "${selector}" 找到店铺元素，文本: "${text}"`);
-                        break;
-                    }
-                }
-                if (shopInfoElement) break;
-            }
-        }
-        
-        if (!shopInfoElement) {
+        const elements = this.findAllElements(this.selectors.shopInfo, document);
+        if (elements.length === 0) {
             console.log('[Utils] 未找到店铺信息元素');
             return null;
         }
         
+        const shopInfoElement = elements[0];
         const rawText = shopInfoElement.textContent.trim();
         const formattedName = this.formatShopName(rawText);
-        console.log(`[Utils] 原始店铺名称: "${rawText}"`);
+        
+        console.log(`[Utils] 找到店铺元素，原始文本: "${rawText}"`);
         console.log(`[Utils] 格式化后店铺名称: "${formattedName}"`);
         
         return formattedName;
