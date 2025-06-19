@@ -8,6 +8,7 @@ class DataExtractor {
         this.extractedData = new Set();
         this.observer = null;
         this.utils = window.DianpingUtils;
+        this.lastShopName = null; // 缓存上次的店铺名称，避免重复发送
     }
 
     /**
@@ -215,6 +216,9 @@ class DataExtractor {
                 allExtractedData.push(...tuanInfo);
             }
             
+            // 检查并发送店铺信息更新
+            this.checkAndSendShopInfoUpdate();
+            
             if (allExtractedData.length > 0 && sendDataCallback) {
                 sendDataCallback({
                     type: 'dianping_data',
@@ -230,10 +234,27 @@ class DataExtractor {
     }
 
     /**
+     * 检查并发送店铺信息更新
+     */
+    checkAndSendShopInfoUpdate() {
+        try {
+            const shopName = this.utils.getCurrentShopName();
+            if (shopName && shopName !== this.lastShopName) {
+                console.log(`[DataExtractor] 检测到店铺信息: ${shopName}`);
+                this.lastShopName = shopName;
+                this.utils.sendShopInfoUpdate(shopName);
+            }
+        } catch (error) {
+            console.error('[DataExtractor] 检查店铺信息时出错:', error);
+        }
+    }
+
+    /**
      * 清空已提取数据缓存
      */
     clearExtractedData() {
         this.extractedData.clear();
+        this.lastShopName = null; // 重置店铺名称缓存
     }
 }
 

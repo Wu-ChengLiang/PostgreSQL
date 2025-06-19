@@ -174,6 +174,9 @@
 
             this.dataExtractor.clearExtractedData();
 
+            // 立即检查并发送店铺信息更新
+            this.sendShopInfoUpdate();
+
             if (this.dataExtractor.detectPageType() === 'chat_page') {
                 console.log('[DianpingExtractor] 聊天页面 - 启动轮询模式');
                 if (this.pollingInterval) clearInterval(this.pollingInterval);

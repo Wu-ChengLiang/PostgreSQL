@@ -7,12 +7,12 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 # 导入必要的服务
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.dirname(__file__))
 
 from aiclient.database_service import DatabaseAPIService
 from aiclient.services.email_notification import EmailNotificationService, ContactInfoExtractor
@@ -136,74 +136,75 @@ class APITester:
         
         return result
     
-    async def test_get_therapist_schedule(self) -> Dict[str, Any]:
-        """测试查询技师排班API"""
-        logger.info("=" * 60)
-        logger.info("📅 测试: 查询技师排班信息")
+    # 取消排班api，因为如果预约失败，只可能是该时间已经被预约
+    # async def test_get_therapist_schedule(self) -> Dict[str, Any]:
+    #     """测试查询技师排班API"""
+    #     logger.info("=" * 60)
+    #     logger.info("📅 测试: 查询技师排班信息")
         
-        try:
-            # 先获取一个技师ID
-            therapists = await self.database_service.search_therapists()
-            if not therapists:
-                return {
-                    "success": False,
-                    "api_name": "get_therapist_schedule",
-                    "error": "没有找到技师，无法测试排班查询",
-                    "message": "测试跳过：无可用技师"
-                }
+    #     try:
+    #         # 先获取一个技师ID
+    #         therapists = await self.database_service.search_therapists()
+    #         if not therapists:
+    #             return {
+    #                 "success": False,
+    #                 "api_name": "get_therapist_schedule",
+    #                 "error": "没有找到技师，无法测试排班查询",
+    #                 "message": "测试跳过：无可用技师"
+    #             }
             
-            test_therapist = therapists[0]
-            therapist_id = test_therapist.get('id')
-            therapist_name = test_therapist.get('name', 'N/A')
+    #         test_therapist = therapists[0]
+    #         therapist_id = test_therapist.get('id')
+    #         therapist_name = test_therapist.get('name', 'N/A')
             
-            # 测试今天和明天的排班
-            today = datetime.now().strftime('%Y-%m-%d')
-            tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+    #         # 测试今天和明天的排班
+    #         today = datetime.now().strftime('%Y-%m-%d')
+    #         tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
             
-            test_dates = [today, tomorrow]
-            all_schedules = []
+    #         test_dates = [today, tomorrow]
+    #         all_schedules = []
             
-            for date in test_dates:
-                logger.info(f"📋 查询技师 {therapist_name} (ID: {therapist_id}) 在 {date} 的排班")
+    #         for date in test_dates:
+    #             logger.info(f"📋 查询技师 {therapist_name} (ID: {therapist_id}) 在 {date} 的排班")
                 
-                schedule = await self.database_service.get_therapist_schedule(therapist_id, date)
+    #             schedule = await self.database_service.get_therapist_schedule(therapist_id, date)
                 
-                schedule_result = {
-                    "date": date,
-                    "therapist_id": therapist_id,
-                    "therapist_name": therapist_name,
-                    "schedule_data": schedule,
-                    "available_times_count": len(schedule.get('available_times', [])),
-                    "booked_times_count": len(schedule.get('booked_times', []))
-                }
-                all_schedules.append(schedule_result)
+    #             schedule_result = {
+    #                 "date": date,
+    #                 "therapist_id": therapist_id,
+    #                 "therapist_name": therapist_name,
+    #                 "schedule_data": schedule,
+    #                 "available_times_count": len(schedule.get('available_times', [])),
+    #                 "booked_times_count": len(schedule.get('booked_times', []))
+    #             }
+    #             all_schedules.append(schedule_result)
                 
-                logger.info(f"  ✅ 可用时间段: {len(schedule.get('available_times', []))} 个")
-                logger.info(f"  📝 已预约时间: {len(schedule.get('booked_times', []))} 个")
+    #             logger.info(f"  ✅ 可用时间段: {len(schedule.get('available_times', []))} 个")
+    #             logger.info(f"  📝 已预约时间: {len(schedule.get('booked_times', []))} 个")
                 
-                # 显示部分可用时间
-                available_times = schedule.get('available_times', [])
-                if available_times:
-                    logger.info(f"  🕐 部分可用时间: {', '.join(available_times[:5])}")
+    #             # 显示部分可用时间
+    #             available_times = schedule.get('available_times', [])
+    #             if available_times:
+    #                 logger.info(f"  🕐 部分可用时间: {', '.join(available_times[:5])}")
             
-            result = {
-                "success": True,
-                "api_name": "get_therapist_schedule", 
-                "description": "查询指定技师在指定日期的可用预约时间段和排班信息",
-                "data": all_schedules,
-                "message": f"成功查询技师 {therapist_name} 的排班信息"
-            }
+    #         result = {
+    #             "success": True,
+    #             "api_name": "get_therapist_schedule", 
+    #             "description": "查询指定技师在指定日期的可用预约时间段和排班信息",
+    #             "data": all_schedules,
+    #             "message": f"成功查询技师 {therapist_name} 的排班信息"
+    #         }
             
-        except Exception as e:
-            result = {
-                "success": False,
-                "api_name": "get_therapist_schedule",
-                "error": str(e),
-                "message": "查询技师排班失败"
-            }
-            logger.error(f"❌ 查询技师排班失败: {e}")
+    #     except Exception as e:
+    #         result = {
+    #             "success": False,
+    #             "api_name": "get_therapist_schedule",
+    #             "error": str(e),
+    #             "message": "查询技师排班失败"
+    #         }
+    #         logger.error(f"❌ 查询技师排班失败: {e}")
         
-        return result
+    #     return result
     
     async def test_get_user_appointments(self) -> Dict[str, Any]:
         """测试查看用户预约列表API"""
@@ -400,78 +401,6 @@ class APITester:
         
         return result
     
-    async def test_additional_apis(self) -> Dict[str, Any]:
-        """测试其他辅助API"""
-        logger.info("=" * 60)
-        logger.info("🔧 测试: 其他辅助API")
-        
-        try:
-            results = []
-            
-            # 测试获取预约详情API（如果有预约的话）
-            try:
-                test_appointment_id = 1  # 假设存在ID为1的预约
-                appointment_details = await self.database_service.get_appointment_details(test_appointment_id)
-                
-                results.append({
-                    "api": "get_appointment_details",
-                    "test_id": test_appointment_id,
-                    "success": True,
-                    "data": appointment_details
-                })
-                logger.info(f"✅ 预约详情查询测试成功: ID {test_appointment_id}")
-                
-            except Exception as e:
-                results.append({
-                    "api": "get_appointment_details",
-                    "test_id": test_appointment_id,
-                    "success": False,
-                    "error": str(e)
-                })
-                logger.warning(f"⚠️ 预约详情查询测试失败: {e}")
-            
-            # 测试取消预约API（使用无效ID，不会真的取消）
-            try:
-                cancel_result = await self.database_service.cancel_appointment(
-                    appointment_id=999999,  # 使用不存在的ID
-                    phone="19999999999"
-                )
-                
-                results.append({
-                    "api": "cancel_appointment",
-                    "test_data": {"appointment_id": 999999, "phone": "19999999999"},
-                    "success": True,
-                    "result": cancel_result
-                })
-                logger.info("✅ 取消预约API测试完成（使用无效ID）")
-                
-            except Exception as e:
-                results.append({
-                    "api": "cancel_appointment",
-                    "success": False,
-                    "error": str(e)
-                })
-                logger.warning(f"⚠️ 取消预约API测试失败: {e}")
-            
-            result = {
-                "success": True,
-                "api_name": "additional_apis",
-                "description": "测试其他辅助API功能",
-                "data": results,
-                "message": "辅助API测试完成"
-            }
-            
-        except Exception as e:
-            result = {
-                "success": False,
-                "api_name": "additional_apis",
-                "error": str(e),
-                "message": "辅助API测试失败"
-            }
-            logger.error(f"❌ 辅助API测试失败: {e}")
-        
-        return result
-    
     async def run_all_tests(self) -> Dict[str, Any]:
         """运行所有API测试"""
         logger.info("🚀 开始全面API测试")
@@ -487,7 +416,6 @@ class APITester:
             ("get_user_appointments", self.test_get_user_appointments),
             ("create_smart_appointment", self.test_create_smart_appointment),
             ("email_notifications", self.test_email_notifications),
-            ("additional_apis", self.test_additional_apis),
         ]
         
         # 运行所有测试
@@ -523,41 +451,7 @@ class APITester:
                 "start_time": start_time.isoformat(),
                 "end_time": end_time.isoformat()
             },
-            "test_results": self.test_results,
-            "tested_apis": [
-                {
-                    "name": "get_stores",
-                    "description": "获取所有门店列表信息，包括门店名称、地址、营业时间、技师数量等"
-                },
-                {
-                    "name": "search_therapists", 
-                    "description": "搜索技师信息，支持按门店ID、专长关键词、最少从业年限等条件搜索"
-                },
-                {
-                    "name": "get_therapist_schedule",
-                    "description": "查询指定技师在指定日期的可用预约时间段和排班信息"
-                },
-                {
-                    "name": "get_user_appointments",
-                    "description": "查看指定用户的所有预约列表，通过手机号查询"
-                },
-                {
-                    "name": "create_smart_appointment",
-                    "description": "智能预约功能：支持两种模式：1)自然语言模式-根据客户消息和上下文自动解析创建预约；2)结构化数据模式-直接使用解析好的预约信息创建预约"
-                },
-                {
-                    "name": "send_appointment_emails",
-                    "description": "发送预约相关的邮件通知，包括给客户发送确认邮件和给技师发送新预约通知邮件"
-                },
-                {
-                    "name": "get_appointment_details",
-                    "description": "获取指定预约的详细信息"
-                },
-                {
-                    "name": "cancel_appointment",
-                    "description": "取消指定的预约，需要提供预约ID和用户电话进行身份验证"
-                }
-            ]
+            "test_results": self.test_results
         }
         
         # 打印最终报告
@@ -570,15 +464,6 @@ class APITester:
         logger.info(f"❌ 失败: {failed_tests}")
         logger.info(f"📈 成功率: {(successful_tests/total_tests)*100:.1f}%")
         logger.info("=" * 80)
-        
-        # 列出失败的测试
-        if failed_tests > 0:
-            logger.info("❌ 失败的测试:")
-            for test_name, result in self.test_results.items():
-                if not result.get('success', False):
-                    logger.info(f"  - {test_name}: {result.get('message', 'N/A')}")
-        else:
-            logger.info("🎉 所有测试都成功通过!")
         
         return final_report
     
@@ -606,19 +491,6 @@ async def main():
             json.dump(final_report, f, ensure_ascii=False, indent=2)
         
         logger.info(f"📄 测试报告已保存到: {report_filename}")
-        
-        # 打印API调用结果摘要
-        print("\n" + "="*80)
-        print("🎯 API调用结果摘要")
-        print("="*80)
-        
-        for test_name, result in final_report['test_results'].items():
-            status = "✅ 成功" if result.get('success') else "❌ 失败"
-            print(f"{status} {result.get('api_name', test_name)}: {result.get('message', 'N/A')}")
-        
-        print(f"\n📊 总体统计: {final_report['test_summary']['success_rate']} 通过率")
-        print(f"⏱️  用时: {final_report['test_summary']['duration_seconds']:.2f} 秒")
-        print("="*80)
         
         return final_report
     

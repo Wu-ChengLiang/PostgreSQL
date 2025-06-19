@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (shopResponse && shopResponse.shopName) {
                 currentShop.textContent = shopResponse.shopName;
                 currentShop.className = 'value connected';
+                console.log(`[Popup] 获取到店铺名称: ${shopResponse.shopName}`);
+            } else {
+                console.log('[Popup] 未获取到店铺名称，将等待店铺信息更新');
             }
         });
     });
@@ -249,12 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
             updateClickUI(false);
             showMessage(request.message || '点击过程中发生错误', 'error');
         } else if (request.type === 'shopInfoUpdate') {
+            console.log(`[Popup] 收到店铺信息更新: ${request.shopName}`);
             if (request.shopName) {
                 currentShop.textContent = request.shopName;
                 currentShop.className = 'value connected';
+                console.log(`[Popup] 店铺信息已更新到界面: ${request.shopName}`);
             } else {
                 currentShop.textContent = '--';
                 currentShop.className = 'value';
+                console.log('[Popup] 店铺信息已清空');
             }
         }
     });

@@ -183,6 +183,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.runtime.sendMessage(message);
             break;
 
+        case 'shopInfoUpdate':
+            // 转发店铺信息更新到popup
+            console.log(`[Background] 转发店铺信息更新: ${message.shopName}`);
+            chrome.runtime.sendMessage(message);
+            break;
+
         case 'getStatus':
              if (!tabId) {
                  sendResponse({ isExtracting: false, isConnected: false });
