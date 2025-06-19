@@ -192,16 +192,27 @@ class SmartAppointmentService:
         if 'shopName' in context_info:
             customer_info['store_name'] = context_info['shopName']
         
-        # 生成客户电话（基于联系人名称）
+        # 提取客户电话号码
+        phone_sources = []
+        
+        # 从联系人名称中提取
         if 'name' in customer_info:
-            # 从联系人名称中提取可能的电话号码
-            name = customer_info['name']
-            phone_match = re.search(r'(\d{11})', name)
-            if phone_match:
-                customer_info['phone'] = phone_match.group(1)
-            else:
-                # 如果没有电话，使用联系人ID生成一个测试电话
-                customer_info['phone'] = f"138{hash(name) % 100000000:08d}"
+            phone_sources.append(customer_info['name'])
+        
+        # 从联系消息中提取  
+        if 'contactMessage' in context_info:
+            phone_sources.append(context_info['contactMessage'])
+        
+        # 查找有效的手机号码
+        for source in phone_sources:
+            if source:
+                # 查找11位手机号码，支持常见格式
+                phone_match = re.search(r'1[3-9]\d{9}', str(source))
+                if phone_match:
+                    customer_info['phone'] = phone_match.group()
+                    break
+        
+        # 如果没有找到真实电话号码，不填写电话
         
         return customer_info
     

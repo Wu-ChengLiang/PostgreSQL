@@ -168,6 +168,7 @@ router.post('/appointments/smart', async (req, res, next) => {
             customer_name,
             store_name,
             appointment_date,
+            customer_phone,
             notes 
         } = req.body;
 
@@ -185,9 +186,9 @@ router.post('/appointments/smart', async (req, res, next) => {
         }
 
         // 自动填充默认值
-        const finalCustomerName = customer_name || `客户_${Date.now()}`;
+        const finalCustomerName = customer_name || '智能预约客户';
         const finalAppointmentDate = appointment_date || new Date().toISOString().split('T')[0];
-        const finalAppointmentTime = appointment_time || '14:00';
+        const finalAppointmentTime = appointment_time || '10:00';
         const finalTherapistName = therapist_name || '默认技师';
 
         // 查找技师（智能匹配逻辑）
@@ -285,11 +286,21 @@ router.post('/appointments/smart', async (req, res, next) => {
 
         console.log('📋 使用技师:', matchedTherapist.name, '(ID:', matchedTherapist.id, ')');
 
+        // 电话号码处理：只使用真实的电话号码
+        let finalCustomerPhone = null;
+        if (customer_phone && /^1[3-9]\d{9}$/.test(customer_phone)) {
+            // 如果提供了有效的电话号码，直接使用
+            finalCustomerPhone = customer_phone;
+            console.log('📱 客户电话:', finalCustomerPhone, '(使用真实电话)');
+        } else {
+            console.log('📱 未提供有效电话号码，将留空');
+        }
+
         // 创建预约
         const result = await appointmentService.createAppointment({
             therapistId: matchedTherapist.id,
             userName: finalCustomerName,
-            userPhone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`, // 生成假电话
+            userPhone: finalCustomerPhone, // 使用处理后的电话号码
             appointmentDate: finalAppointmentDate,
             appointmentTime: finalAppointmentTime,
             notes: notes || `智能预约: ${therapist_name || ''} ${appointment_time || ''}`
