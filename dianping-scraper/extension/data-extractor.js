@@ -108,15 +108,17 @@ class DataExtractor {
             
             let messageType = '';
             let prefix = '';
+            // 改进角色判断逻辑，添加更多调试信息
             if (node.className.includes('shop-text')) {
-                messageType = 'shop';
+                messageType = 'shop';  // 商家消息，对应assistant角色
                 prefix = '[商家] ';
             } else if (node.className.includes('normal-text')) {
-                messageType = 'customer';
+                messageType = 'customer';  // 客户消息，对应user角色
                 prefix = '[客户] ';
             } else {
                 messageType = 'unknown';
                 prefix = '[未知] ';
+                console.log(`[DataExtractor] 未知消息类型，className: ${node.className}`);
             }
             
             // 调试信息
@@ -135,7 +137,7 @@ class DataExtractor {
                     messageType: messageType,
                     content: prefixedContent,
                     originalContent: content,
-                    timestamp: Date.now(),
+                    timestamp: new Date().toISOString(),
                     chatId: memoryStatus.currentChatId,
                     contactName: memoryStatus.combinedContactName
                 };

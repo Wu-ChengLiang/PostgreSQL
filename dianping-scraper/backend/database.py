@@ -133,16 +133,24 @@ class DatabaseManager:
         try:
             cursor = self.conn.cursor()
             
-            # 获取最后一条消息，使用规范化的时间戳比较
+            # 修复时间戳混乱问题：只考虑有效的时间戳（不能是未来时间）
+            current_time = datetime.now()
+            future_threshold = current_time + timedelta(minutes=1)  # 允许1分钟的时间偏差
+            
             cursor.execute("""
                 SELECT role, timestamp, content FROM messages 
                 WHERE chat_id = ? 
+                AND (
+                    -- 过滤掉未来时间戳，只取有效的时间戳
+                    (timestamp LIKE '%Z' AND datetime(substr(timestamp, 1, 19)) <= datetime('now', '+1 minutes')) OR
+                    (timestamp NOT LIKE '%Z' AND datetime(substr(timestamp, 1, 19)) <= datetime('now', '+1 minutes'))
+                )
                 ORDER BY 
                     CASE 
                         WHEN timestamp LIKE '%Z' THEN 
-                            datetime(substr(timestamp, 1, 19), '+8 hours')  -- UTC转本地
+                            datetime(substr(timestamp, 1, 19))  -- UTC时间
                         ELSE 
-                            datetime(substr(timestamp, 1, 19))              -- 已是本地时间
+                            datetime(substr(timestamp, 1, 19))  -- 本地时间  
                     END DESC,
                     rowid DESC  -- 使用rowid作为额外排序条件
                 LIMIT 1
@@ -151,11 +159,11 @@ class DatabaseManager:
             last_message = cursor.fetchone()
             
             if not last_message:
-                logger.debug(f"[回复控制调试] {contact_name}: 没有找到消息历史")
+                logger.debug(f"[回复控制调试] {contact_name}: 没有找到有效的消息历史")
                 return False
             
             role, timestamp, content = last_message
-            logger.debug(f"[回复控制调试] {contact_name}: 最后一条消息 Role={role}, Time={timestamp}, Content={content[:50]}...")
+            logger.debug(f"[回复控制调试] {contact_name}: 最后一条有效消息 Role={role}, Time={timestamp}, Content={content[:50]}...")
             
             # 如果最后一条是商家发送的消息，不回复
             if role == 'assistant':

@@ -136,7 +136,7 @@ class MemoryManager {
                         newChatId: this.currentChatId,
                         newContactName: this.currentContactName,
                         conversationMemory: this.conversationMemory.slice(), // 发送当前记忆的副本
-                        timestamp: Date.now()
+                        timestamp: new Date().toISOString()
                     }
                 }
             });
@@ -155,7 +155,7 @@ class MemoryManager {
         // 使用统一的时间戳格式
         const timestamp = new Date().toISOString();
         
-        // 添加到本地记忆
+        // 添加到本地记忆 - 修正角色映射
         const memoryItem = {
             role: messageData.messageType === 'customer' ? 'user' : 'assistant',
             content: messageData.originalContent,
@@ -186,7 +186,7 @@ class MemoryManager {
         // 使用统一的时间戳格式
         const timestamp = new Date().toISOString();
         
-        // 添加到本地记忆
+        // 添加到本地记忆 - 修正角色映射
         const memoryItem = {
             role: messageData.messageType === 'customer' ? 'user' : 'assistant',
             content: messageData.originalContent,
@@ -222,7 +222,7 @@ class MemoryManager {
                         contactName: this.combinedContactName,
                         message: messageData,
                         conversationMemory: this.conversationMemory.slice(), // 发送当前记忆的副本
-                        timestamp: Date.now()
+                        timestamp: new Date().toISOString()
                     }
                 }
             });
