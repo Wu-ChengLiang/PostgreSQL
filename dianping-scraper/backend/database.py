@@ -5,6 +5,7 @@ import logging
 import threading
 import os
 from typing import Dict, Any, List, Optional
+from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ class DatabaseManager:
             self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             self.conn.row_factory = sqlite3.Row
             cursor = self.conn.cursor()
+            
+            # 原有消息表
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS messages (
                     id TEXT PRIMARY KEY,
@@ -40,6 +43,9 @@ class DatabaseManager:
                 )
             ''')
             cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_id ON messages (chat_id)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON messages (timestamp)')
+            
+
             self.conn.commit()
             logger.info(f"[数据库] 数据库 '{self.db_path}' 初始化成功")
         except sqlite3.Error as e:
@@ -49,13 +55,13 @@ class DatabaseManager:
     def _generate_message_id(self, message: Dict[str, Any]) -> str:
         """
         为消息生成一个确定性的唯一ID。
-        只使用稳定的字段：chatId, role, content。
-        排除不稳定的timestamp和messageId。
+        使用消息内容和时间戳生成，确保唯一性
         """
         keys_to_hash = [
             str(message.get('chatId', '')),
             str(message.get('role', '')),
             str(message.get('content', '')),
+            str(message.get('timestamp', ''))  # 添加时间戳确保唯一性
         ]
         
         message_string = "".join(keys_to_hash)
@@ -74,14 +80,32 @@ class DatabaseManager:
     def add_message(self, message: Dict[str, Any]):
         """将一条消息添加到数据库"""
         message_id = self._generate_message_id(message)
+        
+        # 添加调试日志
+        logger.debug(f"[数据库调试] 准备添加消息，ID: {message_id}")
+        
         if self.is_message_processed(message_id):
+            logger.debug(f"[数据库调试] 消息已存在，跳过: {message_id}")
             return
 
         chat_id = message.get('chatId', 'unknown_chat')
         role = message.get('role', 'unknown')
         content = message.get('content', '')
+        
+        # 统一时间戳格式
         timestamp = message.get('timestamp')
-        raw_data = json.dumps(message, ensure_ascii=False)
+        if isinstance(timestamp, (int, float)):
+            # 如果是时间戳数字，转换为ISO格式
+            timestamp = datetime.fromtimestamp(timestamp / 1000 if timestamp > 1e10 else timestamp).isoformat()
+        elif timestamp is None:
+            timestamp = datetime.now().isoformat()
+        
+        logger.debug(f"[数据库调试] 添加消息: Role={role}, ChatID={chat_id}, Timestamp={timestamp}")
+        
+        raw_data = json.dumps({
+            **message,
+            'timestamp': timestamp  # 确保raw_data中也是标准格式
+        }, ensure_ascii=False)
 
         try:
             cursor = self.conn.cursor()
@@ -90,20 +114,93 @@ class DatabaseManager:
                 (message_id, chat_id, role, content, timestamp, raw_data)
             )
             self.conn.commit()
+            logger.debug(f"[数据库调试] 消息添加成功: {message_id}")
         except sqlite3.IntegrityError:
              # 并发情况下可能重复插入，可以安全忽略
+            logger.debug(f"[数据库调试] 消息重复，忽略: {message_id}")
             pass
         except sqlite3.Error as e:
             logger.error(f"[数据库] 添加消息失败 (ID: {message_id}): {e}")
+
+    def should_reply_to_chat(self, chat_id: str, contact_name: str = None) -> bool:
+        """
+        判断是否应该回复指定聊天
+        规则：
+        1. 如果最后一条消息是商家发送的，不回复
+        2. 如果距离最后一条客户消息时间 > 5分钟，不回复
+        3. 如果距离最后一条客户消息时间 <= 5分钟且最后一条是客户消息，回复
+        """
+        try:
+            cursor = self.conn.cursor()
+            
+            # 获取最后一条消息，使用规范化的时间戳比较
+            cursor.execute("""
+                SELECT role, timestamp, content FROM messages 
+                WHERE chat_id = ? 
+                ORDER BY 
+                    CASE 
+                        WHEN timestamp LIKE '%Z' THEN 
+                            datetime(substr(timestamp, 1, 19), '+8 hours')  -- UTC转本地
+                        ELSE 
+                            datetime(substr(timestamp, 1, 19))              -- 已是本地时间
+                    END DESC,
+                    rowid DESC  -- 使用rowid作为额外排序条件
+                LIMIT 1
+            """, (chat_id,))
+            
+            last_message = cursor.fetchone()
+            
+            if not last_message:
+                logger.debug(f"[回复控制调试] {contact_name}: 没有找到消息历史")
+                return False
+            
+            role, timestamp, content = last_message
+            logger.debug(f"[回复控制调试] {contact_name}: 最后一条消息 Role={role}, Time={timestamp}, Content={content[:50]}...")
+            
+            # 如果最后一条是商家发送的消息，不回复
+            if role == 'assistant':
+                logger.info(f"[回复控制] {contact_name}: 最后一条消息是商家发送，不回复")
+                return False
+            
+            # 检查最后一条客户消息的时间
+            # 转换时间戳为datetime对象
+            try:
+                if timestamp.endswith('Z'):
+                    # UTC时间戳，需要转换为本地时间
+                    msg_time = datetime.fromisoformat(timestamp[:-1]).replace(tzinfo=timezone.utc)
+                    msg_time = msg_time.astimezone(timezone(timedelta(hours=8)))  # 转换为北京时间
+                else:
+                    # 本地时间戳
+                    msg_time = datetime.fromisoformat(timestamp[:19])
+                
+                time_diff = datetime.now() - msg_time.replace(tzinfo=None)
+                minutes_passed = time_diff.total_seconds() / 60
+                
+                logger.debug(f"[回复控制调试] {contact_name}: 距离最后消息 {minutes_passed:.1f} 分钟")
+                
+                if minutes_passed > 5:
+                    logger.info(f"[回复控制] {contact_name}: 距离最后消息超过5分钟({minutes_passed:.1f}分钟)，不回复")
+                    return False
+                else:
+                    logger.info(f"[回复控制] {contact_name}: 最后消息是客户发送且在5分钟内({minutes_passed:.1f}分钟)，需要回复")
+                    return True
+                
+            except Exception as e:
+                logger.error(f"[回复控制] {contact_name}: 时间戳解析错误: {e}, timestamp: {timestamp}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"[回复控制] {contact_name}: 检查回复条件时出错: {e}")
+            return False
 
     def get_chat_history(self, chat_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """获取指定聊天的历史记录"""
         history = []
         try:
             cursor = self.conn.cursor()
-            # 按时间戳和ID排序，确保顺序
+            # 按时间戳排序，确保顺序
             cursor.execute(
-                "SELECT raw_data FROM messages WHERE chat_id = ? ORDER BY timestamp, id LIMIT ?",
+                "SELECT raw_data FROM messages WHERE chat_id = ? ORDER BY timestamp ASC LIMIT ?",
                 (chat_id, limit)
             )
             rows = cursor.fetchall()
@@ -112,6 +209,28 @@ class DatabaseManager:
         except sqlite3.Error as e:
             logger.error(f"[数据库] 获取聊天历史失败 (ChatID: {chat_id}): {e}")
         return history
+    
+    def get_active_chats(self, hours: int = 24) -> List[Dict[str, Any]]:
+        """获取指定小时内的活跃聊天"""
+        try:
+            cursor = self.conn.cursor()
+            since_time = (datetime.now() - timedelta(hours=hours)).isoformat()
+            
+            cursor.execute("""
+                SELECT DISTINCT chat_id, 
+                       MAX(timestamp) as last_activity,
+                       COUNT(*) as message_count
+                FROM messages 
+                WHERE timestamp > ?
+                GROUP BY chat_id
+                ORDER BY last_activity DESC
+            """, (since_time,))
+            
+            return [dict(row) for row in cursor.fetchall()]
+            
+        except sqlite3.Error as e:
+            logger.error(f"[数据库] 获取活跃聊天失败: {e}")
+            return []
 
     def close(self):
         """关闭数据库连接"""

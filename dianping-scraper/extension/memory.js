@@ -152,13 +152,19 @@ class MemoryManager {
     addToMemory(messageData) {
         if (!this.isMemoryEnabled || !messageData) return;
         
+        // 使用统一的时间戳格式
+        const timestamp = new Date().toISOString();
+        
         // 添加到本地记忆
-        this.conversationMemory.push({
+        const memoryItem = {
             role: messageData.messageType === 'customer' ? 'user' : 'assistant',
             content: messageData.originalContent,
-            timestamp: messageData.timestamp,
-            messageId: messageData.id
-        });
+            timestamp: timestamp,
+            chatId: this.currentChatId,
+            contactName: this.combinedContactName
+        };
+        
+        this.conversationMemory.push(memoryItem);
         
         // 限制记忆长度，保留最近的20条消息
         if (this.conversationMemory.length > 20) {
@@ -177,13 +183,19 @@ class MemoryManager {
     addToMemoryWithoutTrigger(messageData) {
         if (!this.isMemoryEnabled || !messageData) return;
         
+        // 使用统一的时间戳格式
+        const timestamp = new Date().toISOString();
+        
         // 添加到本地记忆
-        this.conversationMemory.push({
+        const memoryItem = {
             role: messageData.messageType === 'customer' ? 'user' : 'assistant',
             content: messageData.originalContent,
-            timestamp: messageData.timestamp,
-            messageId: messageData.id
-        });
+            timestamp: timestamp,
+            chatId: this.currentChatId,
+            contactName: this.combinedContactName
+        };
+        
+        this.conversationMemory.push(memoryItem);
         
         // 限制记忆长度，保留最近的20条消息
         if (this.conversationMemory.length > 20) {

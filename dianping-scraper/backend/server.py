@@ -14,6 +14,7 @@ from typing import Set, Dict, Any, List
 import signal
 import sys
 import os
+import traceback
 
 # 导入新的数据库管理器
 from database import db_manager
@@ -22,12 +23,11 @@ from database import db_manager
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from aiclient import AIClient
 
-# 配置日志
+# 配置详细日志
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # 改为DEBUG级别
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('dianping_scraper.log', encoding='utf-8'),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -52,6 +52,7 @@ class DianpingWebSocketServer:
         self.ai_client = AIClient()
         self.server = None
         self.is_stopping = False
+        self.polling_task = None
         
         logger.info(f"[AI] AI客户端初始化成功，可用提供商: {len(self.ai_client.adapters)}")
         logger.info(f"[数据库] 数据库管理器已初始化")
@@ -155,8 +156,8 @@ class DianpingWebSocketServer:
 
     async def handle_memory_update(self, data: Dict[str, Any], timestamp: str) -> Dict[str, Any]:
         """
-        使用数据库处理记忆更新，识别新消息并触发AI。
-        这是目前系统的核心AI触发器。
+        使用数据库处理记忆更新，识别新消息并根据5分钟规则触发AI。
+        改进版本：加入时间控制，避免频繁回复。
         """
         payload = data.get("payload", {})
         chat_id = self._safe_get_value(payload.get("chatId"), "default_chat")
@@ -192,6 +193,11 @@ class DianpingWebSocketServer:
         if not new_customer_messages:
             logger.info(f"[AI触发] {contact_name}: 新消息中无客户消息，不触发AI")
             return { "type": "memory_updated", "new_messages_count": len(new_messages) }
+
+        # 检查是否应该回复（5分钟规则：只在客户消息发送后5分钟内回复）
+        if not db_manager.should_reply_to_chat(chat_id, contact_name):
+            logger.info(f"[AI触发] {contact_name}: 根据5分钟规则，暂不回复")
+            return { "type": "memory_updated_no_reply", "new_messages_count": len(new_messages) }
 
         latest_customer_message = new_customer_messages[-1]
         message_content = latest_customer_message.get("content", "")
@@ -229,6 +235,7 @@ class DianpingWebSocketServer:
                     "content": ai_response_text, "timestamp": ai_reply_message["timestamp"]
                 }
                 db_manager.add_message(db_message)
+                
                 logger.info(f"[数据库] 已存储AI对 {contact_name} 的回复")
             else:
                 logger.warning(f"[AI回复] {contact_name}: AI未返回有效回复")
@@ -297,6 +304,10 @@ class DianpingWebSocketServer:
         """启动WebSocket服务器"""
         self.server = await websockets.serve(self.handle_client, self.host, self.port)
         logger.info(f"🚀 服务器已启动，监听于 ws://{self.host}:{self.port}")
+        
+        # 启动轮询任务
+        self.polling_task = asyncio.create_task(self.polling_worker())
+        
         await self.server.wait_closed()
 
     async def _broadcast_ai_reply(self, ai_response: Dict[str, Any]):
@@ -323,11 +334,28 @@ class DianpingWebSocketServer:
             return
         self.is_stopping = True
         logger.info("服务器正在停止...")
+        
+        # 停止轮询任务
+        if self.polling_task:
+            self.polling_task.cancel()
+            try:
+                await self.polling_task
+            except asyncio.CancelledError:
+                logger.info("[轮询] 轮询任务已停止")
+        
         if self.server:
             self.server.close()
             await self.server.wait_closed()
         db_manager.close()
         logger.info("服务器已成功关闭")
+
+    async def polling_worker(self):
+        """轮询任务已禁用 - 只使用实时处理避免双重触发"""
+        logger.info("[轮询] 轮询任务已禁用，只使用实时消息处理")
+        
+        # 空循环，不执行任何轮询逻辑
+        while not self.is_stopping:
+            await asyncio.sleep(30)  # 延长睡眠时间
 
 async def main():
     server = DianpingWebSocketServer()

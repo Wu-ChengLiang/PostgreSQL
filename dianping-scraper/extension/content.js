@@ -180,7 +180,8 @@
             if (this.dataExtractor.detectPageType() === 'chat_page') {
                 console.log('[DianpingExtractor] 聊天页面 - 启动轮询模式');
                 if (this.pollingInterval) clearInterval(this.pollingInterval);
-                this.pollingInterval = setInterval(() => this.extractData(), 2000);
+                // 优化：使用5秒轮询，减少服务器负载
+                this.pollingInterval = setInterval(() => this.extractData(), 5000);
             } else {
                 console.log('[DianpingExtractor] 普通页面 - 启动DOM监听模式');
                 this.dataExtractor.startObserving(this.memoryManager, (data) => {
