@@ -12,7 +12,7 @@ class ContactManager {
         this.totalClicks = 0;
         this.currentRound = 1;
         this.totalProcessedContacts = 0;
-        this.clickInterval = 2000;
+        this.clickInterval = 3200;
         this.pageLoadWaitTime = 1500;
         this.extractionWaitTime = 2500;
         this.utils = window.DianpingUtils;
@@ -105,7 +105,7 @@ class ContactManager {
     /**
      * 开始点击联系人循环
      */
-    startClickContacts(count = 2, interval = 2000) {
+    startClickContacts(count = 2, interval = 3200) {
         if (this.isClickingContacts) {
             console.log('[ContactManager] 循环提取已在进行中');
             return;

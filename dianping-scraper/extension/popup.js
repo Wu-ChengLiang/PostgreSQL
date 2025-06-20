@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!currentTabId || startClickButton.disabled) return;
 
         const count = parseInt(contactCountInput.value) || 10;
-        const interval = parseInt(clickIntervalSelect.value) || 2000;
+        const interval = parseInt(clickIntervalSelect.value) || 3200;
 
         if (count < 1 || count > 50) {
             showMessage('请输入1-50之间的联系人数量', 'error');
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 显示当前模式
-        let speedMode = interval <= 1000 ? '中速' : (interval <= 2000 ? '标准' : '慢速');
+        let speedMode = interval <= 2800 ? '快速' : (interval <= 3200 ? '标准' : '慢速');
 
         chrome.runtime.sendMessage({
             type: 'startClickContacts',
