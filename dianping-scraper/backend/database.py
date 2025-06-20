@@ -55,13 +55,13 @@ class DatabaseManager:
     def _generate_message_id(self, message: Dict[str, Any]) -> str:
         """
         为消息生成一个确定性的唯一ID。
-        使用消息内容和时间戳生成，确保唯一性
+        仅使用聊天ID、角色和内容，避免时间戳导致的重复
         """
         keys_to_hash = [
             str(message.get('chatId', '')),
             str(message.get('role', '')),
-            str(message.get('content', '')),
-            str(message.get('timestamp', ''))  # 添加时间戳确保唯一性
+            str(message.get('content', ''))
+            # 移除时间戳，避免同一条消息因为时间戳不同而被重复处理
         ]
         
         message_string = "".join(keys_to_hash)
@@ -171,20 +171,32 @@ class DatabaseManager:
                 return False
             
             # 检查最后一条客户消息的时间
-            # 转换时间戳为datetime对象
+            # 转换时间戳为datetime对象 - 修复时区处理
             try:
+                current_time = datetime.now()
+                
                 if timestamp.endswith('Z'):
                     # UTC时间戳，需要转换为本地时间
-                    msg_time = datetime.fromisoformat(timestamp[:-1]).replace(tzinfo=timezone.utc)
-                    msg_time = msg_time.astimezone(timezone(timedelta(hours=8)))  # 转换为北京时间
+                    msg_time_utc = datetime.fromisoformat(timestamp[:-1]).replace(tzinfo=timezone.utc)
+                    # 转换为北京时间（UTC+8）
+                    beijing_tz = timezone(timedelta(hours=8))
+                    msg_time = msg_time_utc.astimezone(beijing_tz)
+                    
+                    # 为了计算时间差，将当前时间也转换为北京时间
+                    current_time_beijing = current_time.replace(tzinfo=beijing_tz)
+                    time_diff = current_time_beijing - msg_time
+                    
+                    logger.debug(f"[时区调试] {contact_name}: UTC时间 {timestamp} -> 北京时间 {msg_time.isoformat()}")
                 else:
-                    # 本地时间戳
+                    # 本地时间戳，直接使用
                     msg_time = datetime.fromisoformat(timestamp[:19])
+                    time_diff = current_time - msg_time
+                    
+                    logger.debug(f"[时区调试] {contact_name}: 本地时间 {timestamp}")
                 
-                time_diff = datetime.now() - msg_time.replace(tzinfo=None)
                 minutes_passed = time_diff.total_seconds() / 60
                 
-                logger.debug(f"[回复控制调试] {contact_name}: 距离最后消息 {minutes_passed:.1f} 分钟")
+                logger.debug(f"[回复控制调试] {contact_name}: 消息时间 {msg_time.strftime('%H:%M:%S')}, 当前时间 {current_time.strftime('%H:%M:%S')}, 距离最后消息 {minutes_passed:.1f} 分钟")
                 
                 if minutes_passed > 5:
                     logger.info(f"[回复控制] {contact_name}: 距离最后消息超过5分钟({minutes_passed:.1f}分钟)，不回复")

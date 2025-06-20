@@ -9,6 +9,7 @@ class DataExtractor {
         this.observer = null;
         this.utils = window.DianpingUtils;
         this.lastShopName = null; // 缓存上次的店铺名称，避免重复发送
+        this.processedMessages = new Map(); // 存储已处理的消息ID及其时间戳
     }
 
     /**
@@ -131,19 +132,44 @@ class DataExtractor {
 
             // 只要有内容（包括纯表情）且不重复，就提取
             if (content.length > 0 && !this.extractedData.has(uniqueKey)) {
+                // 添加更严格的去重机制，包含chatId和内容的组合
+                const strictUniqueKey = `${memoryStatus.currentChatId}_${content}_${messageType}`;
+                
+                if (this.extractedData.has(strictUniqueKey)) {
+                    console.log(`[DataExtractor] 跳过重复消息: ${content}`);
+                    return;
+                }
+                
+                // 检查是否已经处理过这条消息
+                const messageSignature = `${memoryStatus.currentChatId}_${messageType}_${content}`;
+                const now = Date.now();
+                
+                if (this.processedMessages.has(messageSignature)) {
+                    const lastProcessed = this.processedMessages.get(messageSignature);
+                    // 如果5分钟内已经处理过相同的消息，跳过
+                    if (now - lastProcessed < 5 * 60 * 1000) {
+                        console.log(`[DataExtractor] 5分钟内已处理过此消息，跳过: ${content}`);
+                        return;
+                    }
+                }
+                
+                // 记录处理时间
+                this.processedMessages.set(messageSignature, now);
+                
                 const messageData = {
                     id: this.utils.generateId('msg'),
                     type: 'chat_message',
                     messageType: messageType,
                     content: prefixedContent,
                     originalContent: content,
-                    timestamp: new Date().toISOString(),
+                    timestamp: new Date().toISOString(), // 注意：这是检测时间，非实际消息时间
                     chatId: memoryStatus.currentChatId,
                     contactName: memoryStatus.combinedContactName
                 };
                 
                 messages.push(messageData);
                 this.extractedData.add(uniqueKey);
+                this.extractedData.add(strictUniqueKey); // 同时添加严格去重键
                 
                 // 根据消息类型添加到记忆
                 if (messageType === 'customer') {
@@ -264,6 +290,7 @@ class DataExtractor {
     clearExtractedData() {
         this.extractedData.clear();
         this.lastShopName = null; // 重置店铺名称缓存
+        this.processedMessages.clear(); // 清空已处理消息记录
     }
 }
 
