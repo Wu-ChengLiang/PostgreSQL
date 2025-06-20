@@ -10,6 +10,7 @@ class DataExtractor {
         this.utils = window.DianpingUtils;
         this.lastShopName = null; // 缓存上次的店铺名称，避免重复发送
         this.processedMessages = new Map(); // 存储已处理的消息ID及其时间戳
+        this.timestampExtractor = new window.TimestampExtractor(); // 时间戳提取器
     }
 
     /**
@@ -156,16 +157,31 @@ class DataExtractor {
                 // 记录处理时间
                 this.processedMessages.set(messageSignature, now);
                 
-                const messageData = {
+                // 创建初始消息数据（使用扫描时间戳）
+                let messageData = {
                     id: this.utils.generateId('msg'),
                     type: 'chat_message',
                     messageType: messageType,
                     content: prefixedContent,
                     originalContent: content,
-                    timestamp: new Date().toISOString(), // 注意：这是检测时间，非实际消息时间
+                    timestamp: new Date().toISOString(), // 扫描时间戳，稍后会被替换
                     chatId: memoryStatus.currentChatId,
                     contactName: memoryStatus.combinedContactName
                 };
+                
+                // 🚀 关键改进：尝试提取真实时间戳
+                try {
+                    messageData = this.timestampExtractor.updateMessageTimestamp(messageData, node);
+                    
+                    if (messageData.timestampSource === 'extracted') {
+                        console.log(`[DataExtractor] ✅ 使用真实时间戳: ${messageData.timestamp}`);
+                    } else {
+                        console.log(`[DataExtractor] ⚠️ 使用扫描时间戳: ${messageData.timestamp}`);
+                    }
+                } catch (error) {
+                    console.error(`[DataExtractor] 时间戳提取失败，使用降级策略:`, error);
+                    messageData.timestampSource = 'error';
+                }
                 
                 messages.push(messageData);
                 this.extractedData.add(uniqueKey);

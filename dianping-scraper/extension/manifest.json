@@ -30,6 +30,7 @@
             "matches": ["*://*.dianping.com/*"],
             "js": [
                 "utils.js",
+                "timestamp-extractor.js",
                 "memory.js",
                 "data-extractor.js",
                 "contact-manager.js", 
