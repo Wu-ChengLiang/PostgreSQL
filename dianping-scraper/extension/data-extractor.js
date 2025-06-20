@@ -103,7 +103,8 @@ class DataExtractor {
         const memoryStatus = memoryManager.getMemoryStatus();
 
         messageNodes.forEach((node, index) => {
-            const content = (node.innerText || node.textContent).trim();
+            // 使用新的表情处理方法提取内容
+            const content = this.utils.extractMessageContent(node);
             
             let messageType = '';
             let prefix = '';
@@ -118,10 +119,16 @@ class DataExtractor {
                 prefix = '[未知] ';
             }
             
+            // 调试信息
+            if (content.length > 0) {
+                console.log(`[DataExtractor] 检测到${messageType}消息: "${content}" (长度: ${content.length})`);
+            }
+            
             const prefixedContent = prefix + content;
             const uniqueKey = `${content}_${messageType}`;
 
-            if (content && !this.extractedData.has(uniqueKey)) {
+            // 只要有内容（包括纯表情）且不重复，就提取
+            if (content.length > 0 && !this.extractedData.has(uniqueKey)) {
                 const messageData = {
                     id: this.utils.generateId('msg'),
                     type: 'chat_message',
