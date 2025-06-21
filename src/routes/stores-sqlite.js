@@ -6,13 +6,20 @@ const database = require('../config/database-sqlite');
 router.get('/', async (req, res) => {
   try {
     const stores = await database.all(`
-      SELECT * FROM stores 
-      ORDER BY rating DESC, review_count DESC
+      SELECT 
+        s.*,
+        COUNT(t.id) as therapist_count
+      FROM stores s
+      LEFT JOIN therapists t ON s.id = t.store_id
+      GROUP BY s.id
+      ORDER BY s.rating DESC, s.review_count DESC
     `);
     
     res.json({
       success: true,
-      stores: stores
+      data: {
+        stores: stores
+      }
     });
   } catch (error) {
     console.error('获取门店列表失败:', error);
@@ -51,7 +58,9 @@ router.get('/:id', async (req, res) => {
     
     res.json({
       success: true,
-      store: store
+      data: {
+        store: store
+      }
     });
   } catch (error) {
     console.error('获取门店详情失败:', error);
@@ -87,7 +96,9 @@ router.post('/', async (req, res) => {
     
     res.status(201).json({
       success: true,
-      store: store
+      data: {
+        store: store
+      }
     });
   } catch (error) {
     console.error('创建门店失败:', error);
@@ -159,7 +170,9 @@ router.put('/:id', async (req, res) => {
     
     res.json({
       success: true,
-      store: store
+      data: {
+        store: store
+      }
     });
   } catch (error) {
     console.error('更新门店失败:', error);

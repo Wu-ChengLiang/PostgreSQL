@@ -518,52 +518,124 @@ async function updateAppointmentStatus(id, status) {
 // 加载门店列表
 async function loadStores() {
     try {
+        showLoading('正在加载门店列表...');
         const data = await apiRequest(`${API_BASE_URL}/stores`);
         
         if (data.success) {
+            const stores = data.data?.stores || data || [];
             const storesList = document.getElementById('storesList');
-            storesList.innerHTML = data.data.stores.map(store => `
-                <div class="store-card">
+            
+            if (stores.length === 0) {
+                storesList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🏪 暂无门店</h3>
+                        <p>点击"新增门店"按钮添加第一个门店</p>
+                    </div>
+                `;
+                hideLoading();
+                return;
+            }
+            
+            storesList.innerHTML = stores.map(store => `
+                <div class="store-card elderly-friendly">
                     <div class="store-header">
-                        <h3>${store.name}</h3>
-                        <span class="store-status ${store.status || 'active'}">${getStoreStatusText(store.status || 'active')}</span>
+                        <h3 class="store-name">🏪 ${store.name}</h3>
+                        <span class="store-status-badge ${store.status || 'active'}">${getStoreStatusText(store.status || 'active')}</span>
                     </div>
                     <div class="store-info">
-                        <p><strong>地址：</strong>${store.address || '未设置'}</p>
-                        <p><strong>电话：</strong>${store.phone || '未设置'}</p>
-                        <p><strong>营业时间：</strong>${store.business_hours}</p>
-                        <p><strong>技师数量：</strong>${store.therapist_count || 0}人</p>
-                        ${store.manager ? `<p><strong>店长：</strong>${store.manager}</p>` : ''}
+                        <div class="info-item">
+                            <span class="info-label">📍 地址：</span>
+                            <span class="info-value">${store.address || '未设置'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📞 电话：</span>
+                            <span class="info-value">${store.phone || '未设置'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">🕒 营业时间：</span>
+                            <span class="info-value">${store.business_hours || '9:00-21:00'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">👨‍⚕️ 技师数量：</span>
+                            <span class="info-value">${store.therapist_count || 0}人</span>
+                        </div>
+                        ${store.manager ? `
+                        <div class="info-item">
+                            <span class="info-label">👔 店长：</span>
+                            <span class="info-value">${store.manager}</span>
+                        </div>
+                        ` : ''}
                     </div>
                     <div class="store-actions">
-                        <button class="btn btn-sm btn-primary" onclick="editStore(${store.id})">编辑</button>
-                        <button class="btn btn-sm btn-secondary" onclick="viewStoreTherapists(${store.id})">查看技师</button>
-                        <button class="btn btn-sm btn-delete" onclick="deleteStore(${store.id})">删除</button>
+                        <button class="btn btn-primary btn-large" onclick="editStore(${store.id})">✏️ 编辑</button>
+                        <button class="btn btn-info btn-large" onclick="viewStoreTherapists(${store.id})">👥 查看技师</button>
+                        <button class="btn btn-warning btn-large" onclick="viewStoreStats(${store.id})">📊 门店统计</button>
                     </div>
                 </div>
             `).join('');
+            
+            showMessage(`✅ 成功加载 ${stores.length} 个门店`, 'success');
+        } else {
+            showMessage('❌ 加载门店列表失败', 'error');
         }
     } catch (error) {
         console.error('加载门店列表失败:', error);
-        showMessage('加载门店列表失败', 'error');
+        showMessage('❌ 加载门店列表失败，请稍后重试', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
 // 搜索门店
 function searchStores() {
-    const searchTerm = document.getElementById('storeSearchInput').value.toLowerCase();
+    const searchTerm = document.getElementById('storeSearchInput').value.toLowerCase().trim();
     const storeCards = document.querySelectorAll('.store-card');
     
-    storeCards.forEach(card => {
-        const storeName = card.querySelector('h3').textContent.toLowerCase();
-        const storeAddress = card.querySelector('.store-info').textContent.toLowerCase();
-        
-        if (storeName.includes(searchTerm) || storeAddress.includes(searchTerm)) {
+    if (!searchTerm) {
+        // 如果搜索框为空，显示所有门店
+        storeCards.forEach(card => {
             card.style.display = 'block';
+        });
+        showMessage('🔍 显示所有门店', 'info');
+        return;
+    }
+    
+    let visibleCount = 0;
+    storeCards.forEach(card => {
+        const storeName = card.querySelector('.store-name').textContent.toLowerCase();
+        const storeInfo = card.querySelector('.store-info').textContent.toLowerCase();
+        
+        if (storeName.includes(searchTerm) || storeInfo.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
         } else {
             card.style.display = 'none';
         }
     });
+    
+    if (visibleCount === 0) {
+        showMessage('❌ 未找到匹配的门店', 'warning');
+    } else {
+        showMessage(`🔍 找到 ${visibleCount} 个匹配的门店`, 'success');
+    }
+}
+
+// 显示加载状态
+function showLoading(message = '加载中...') {
+    // 可以在这里添加加载动画
+    console.log('Loading:', message);
+}
+
+// 隐藏加载状态
+function hideLoading() {
+    // 隐藏加载动画
+    console.log('Loading hidden');
+}
+
+// 查看门店统计
+function viewStoreStats(storeId) {
+    showMessage('📊 门店统计功能开发中...', 'info');
+    // TODO: 实现门店统计功能
 }
 
 // 获取门店状态文本
@@ -580,6 +652,9 @@ function getStoreStatusText(status) {
 function openAddStoreModal() {
     document.getElementById('addStoreModal').style.display = 'block';
     document.getElementById('addStoreForm').reset();
+    // 设置默认营业时间
+    document.getElementById('storeHours').value = '9:00-21:00';
+    showMessage('📝 请填写门店信息', 'info');
 }
 
 // 关闭添加门店模态框
@@ -592,17 +667,43 @@ function closeAddStoreModal() {
 async function handleAddStore(e) {
     e.preventDefault();
     
+    // 获取表单数据
+    const storeName = document.getElementById('storeName').value.trim();
+    const storeAddress = document.getElementById('storeAddress').value.trim();
+    const storeHours = document.getElementById('storeHours').value.trim();
+    
+    // 基本验证
+    if (!storeName) {
+        showMessage('❌ 请输入门店名称', 'error');
+        document.getElementById('storeName').focus();
+        return;
+    }
+    
+    if (!storeAddress) {
+        showMessage('❌ 请输入门店地址', 'error');
+        document.getElementById('storeAddress').focus();
+        return;
+    }
+    
+    if (!storeHours) {
+        showMessage('❌ 请输入营业时间', 'error');
+        document.getElementById('storeHours').focus();
+        return;
+    }
+    
     const formData = {
-        name: document.getElementById('storeName').value,
-        code: document.getElementById('storeCode').value,
-        address: document.getElementById('storeAddress').value,
-        phone: document.getElementById('storePhone').value,
-        manager: document.getElementById('storeManager').value,
-        business_hours: document.getElementById('storeHours').value,
-        description: document.getElementById('storeDescription').value
+        name: storeName,
+        code: document.getElementById('storeCode').value.trim(),
+        address: storeAddress,
+        phone: document.getElementById('storePhone').value.trim(),
+        manager: document.getElementById('storeManager').value.trim(),
+        business_hours: storeHours,
+        description: document.getElementById('storeDescription').value.trim()
     };
     
     try {
+        showLoading('正在添加门店...');
+        
         const data = await apiRequest(`${API_BASE_URL}/stores`, {
             method: 'POST',
             headers: {
@@ -612,16 +713,18 @@ async function handleAddStore(e) {
         });
         
         if (data.success) {
-            showMessage('门店添加成功', 'success');
+            showMessage('✅ 门店添加成功！', 'success');
             closeAddStoreModal();
             loadStores();
             loadStoresForFilter(); // 刷新筛选器
         } else {
-            showMessage(data.error?.message || '添加失败', 'error');
+            showMessage(`❌ 添加失败：${data.error?.message || '未知错误'}`, 'error');
         }
     } catch (error) {
         console.error('添加门店失败:', error);
-        showMessage('添加失败，请稍后重试', 'error');
+        showMessage('❌ 添加失败，请检查网络连接后重试', 'error');
+    } finally {
+        hideLoading();
     }
 }
 

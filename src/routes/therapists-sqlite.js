@@ -39,7 +39,9 @@ router.get('/', async (req, res) => {
     
     res.json({
       success: true,
-      therapists: therapists
+      data: {
+        therapists: therapists
+      }
     });
   } catch (error) {
     console.error('获取技师列表失败:', error);
@@ -87,7 +89,9 @@ router.get('/:id', async (req, res) => {
     
     res.json({
       success: true,
-      therapist: therapist
+      data: {
+        therapist: therapist
+      }
     });
   } catch (error) {
     console.error('获取技师详情失败:', error);
@@ -105,17 +109,39 @@ router.post('/', async (req, res) => {
       name,
       store_id,
       title,
+      position,
       specialties,
       service_types,
       bio,
-      years_experience
+      years_experience,
+      years_of_experience,
+      experience_years,
+      phone,
+      status
     } = req.body;
     
+    // 兼容不同的字段名
+    const experienceYears = years_experience || years_of_experience || experience_years || 0;
+    
     // 验证必填字段
-    if (!name || !store_id || !service_types) {
+    if (!name || !store_id) {
       return res.status(400).json({
         success: false,
-        error: '姓名、门店ID和服务类型为必填项'
+        error: {
+          code: 'INVALID_PARAMS',
+          message: '缺少必填字段: name, store_id'
+        }
+      });
+    }
+    
+    // 如果没有提供 years_of_experience，返回具体错误
+    if (!experienceYears && !years_of_experience) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_PARAMS',
+          message: '缺少必填字段: years_of_experience'
+        }
       });
     }
     
@@ -135,18 +161,20 @@ router.post('/', async (req, res) => {
     const result = await database.run(`
       INSERT INTO therapists (
         name, store_id, title, specialties, service_types, 
-        bio, rating, review_count, years_experience
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        bio, rating, review_count, years_experience, phone, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       name,
       store_id,
-      title || null,
+      title || position || null,
       specialties || null,
-      service_types,
+      service_types || '按摩',
       bio || null,
       0,
       0,
-      years_experience || 0
+      experienceYears,
+      phone || null,
+      status || 'active'
     ]);
     
     const therapist = await database.get(
@@ -156,7 +184,9 @@ router.post('/', async (req, res) => {
     
     res.status(201).json({
       success: true,
-      therapist: therapist
+      data: {
+        therapist: therapist
+      }
     });
   } catch (error) {
     console.error('创建技师失败:', error);
