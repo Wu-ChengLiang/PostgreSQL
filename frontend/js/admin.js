@@ -510,51 +510,73 @@ async function loadAppointments() {
             }
             
             appointmentsList.innerHTML = appointments.map(appointment => `
-                <div class="appointment-card elderly-friendly">
-                    <div class="appointment-header">
-                        <div class="appointment-time">
-                            <span class="appointment-date">📅 ${appointment.appointment_date}</span>
-                            <span class="appointment-time-slot">🕐 ${appointment.start_time}${appointment.end_time ? ` - ${appointment.end_time}` : ''}</span>
+                <div class="appointment-container">
+                    <div class="appointment-card elderly-friendly">
+                        <div class="appointment-header">
+                            <div class="appointment-time">
+                                <span class="appointment-date">📅 ${appointment.appointment_date}</span>
+                                <span class="appointment-time-slot">🕐 ${appointment.start_time}${appointment.end_time ? ` - ${appointment.end_time}` : ''}</span>
+                            </div>
+                            <span class="appointment-status-badge status-${appointment.status}">${getAppointmentStatusText(appointment.status)}</span>
                         </div>
-                        <span class="appointment-status-badge status-${appointment.status}">${getAppointmentStatusText(appointment.status)}</span>
-                    </div>
                     <div class="appointment-info">
-                        <div class="info-item">
-                            <span class="info-label">👤 客户：</span>
-                            <span class="info-value">${appointment.user_name || appointment.customer_name || '未知'}</span>
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-icon">👤</div>
+                                <div class="info-content">
+                                    <div class="info-label">客户</div>
+                                    <div class="info-value">${appointment.user_name || appointment.customer_name || '未知'}</div>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-icon">📞</div>
+                                <div class="info-content">
+                                    <div class="info-label">电话</div>
+                                    <div class="info-value">${appointment.user_phone || appointment.customer_phone || '未设置'}</div>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-icon">👨‍⚕️</div>
+                                <div class="info-content">
+                                    <div class="info-label">技师</div>
+                                    <div class="info-value">${appointment.therapist_name || '未分配'}</div>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-icon">🏪</div>
+                                <div class="info-content">
+                                    <div class="info-label">门店</div>
+                                    <div class="info-value">${appointment.store_name || '未设置'}</div>
+                                </div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-icon">💆</div>
+                                <div class="info-content">
+                                    <div class="info-label">服务</div>
+                                    <div class="info-value">${appointment.service_type || '未设置'}</div>
+                                </div>
+                            </div>
+                            ${appointment.notes ? `
+                            <div class="info-card info-card-full">
+                                <div class="info-icon">📝</div>
+                                <div class="info-content">
+                                    <div class="info-label">备注</div>
+                                    <div class="info-value">${appointment.notes}</div>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">📞 电话：</span>
-                            <span class="info-value">${appointment.user_phone || appointment.customer_phone || '未设置'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">👨‍⚕️ 技师：</span>
-                            <span class="info-value">${appointment.therapist_name || '未分配'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">🏪 门店：</span>
-                            <span class="info-value">${appointment.store_name || '未设置'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">💆 服务：</span>
-                            <span class="info-value">${appointment.service_type || '未设置'}</span>
-                        </div>
-                        ${appointment.notes ? `
-                        <div class="info-item">
-                            <span class="info-label">📝 备注：</span>
-                            <span class="info-value">${appointment.notes}</span>
-                        </div>
-                        ` : ''}
                     </div>
-                    <div class="appointment-actions">
-                        <button class="btn btn-primary btn-large" onclick="editAppointment(${appointment.id})">✏️ 编辑</button>
-                        ${appointment.status === 'pending' ? 
-                            `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'confirmed')">✅ 确认</button>` : ''}
-                        ${appointment.status === 'confirmed' ? 
-                            `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'completed')">✨ 完成</button>` : ''}
-                        ${['pending', 'confirmed'].includes(appointment.status) ? 
-                            `<button class="btn btn-danger btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'cancelled')">❌ 取消</button>` : ''}
-                        <button class="btn btn-info btn-large" onclick="viewAppointmentDetails(${appointment.id})">👁️ 详情</button>
+                        <div class="appointment-actions">
+                            <button class="btn btn-primary btn-large" onclick="editAppointment(${appointment.id})">✏️ 编辑</button>
+                            ${appointment.status === 'pending' ? 
+                                `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'confirmed')">✅ 确认</button>` : ''}
+                            ${appointment.status === 'confirmed' ? 
+                                `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'completed')">✨ 完成</button>` : ''}
+                            ${['pending', 'confirmed'].includes(appointment.status) ? 
+                                `<button class="btn btn-danger btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'cancelled')">❌ 取消</button>` : ''}
+                            <button class="btn btn-info btn-large" onclick="viewAppointmentDetails(${appointment.id})">👁️ 详情</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -577,7 +599,7 @@ function searchAppointments() {
     const statusFilter = document.getElementById('appointmentStatusFilter').value;
     const searchTerm = document.getElementById('appointmentSearchInput').value.toLowerCase().trim();
     
-    const appointmentCards = document.querySelectorAll('.appointment-card');
+    const appointmentCards = document.querySelectorAll('.appointment-container');
     let visibleCount = 0;
     
     appointmentCards.forEach(card => {
