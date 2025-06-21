@@ -5,6 +5,8 @@ const authService = require('../services/authService');
 const therapistService = require('../services/therapistService');
 const appointmentService = require('../services/appointmentService');
 const storeService = require('../services/storeService');
+const memberService = require('../services/memberService');
+const medicalService = require('../services/medicalService');
 
 // 管理员登录
 router.post('/login', async (req, res, next) => {
@@ -387,6 +389,422 @@ router.get('/statistics/overview', async (req, res, next) => {
         } finally {
             // Don't close the connection with persistent pool
         }
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ======================= 会员管理 API =======================
+
+// 通过手机号查询会员信息
+router.get('/members/phone/:phone', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        
+        if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '请提供有效的手机号'
+                }
+            });
+        }
+
+        const member = await memberService.getMemberByPhone(phone);
+
+        res.json({
+            success: true,
+            member
+        });
+    } catch (error) {
+        if (error.message === '会员不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '会员不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 创建新会员
+router.post('/members', async (req, res, next) => {
+    try {
+        const { name, phone, email, gender, age } = req.body;
+        
+        // 验证必填字段
+        if (!name || !phone) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '姓名和手机号为必填字段'
+                }
+            });
+        }
+        
+        if (!/^1[3-9]\d{9}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '请提供有效的手机号'
+                }
+            });
+        }
+
+        const member = await memberService.createMember({ name, phone, email, gender, age });
+
+        res.status(201).json({
+            success: true,
+            member
+        });
+    } catch (error) {
+        if (error.message === '手机号已存在') {
+            return res.status(409).json({
+                success: false,
+                error: {
+                    code: 'CONFLICT',
+                    message: '手机号已存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 会员充值
+router.post('/members/:phone/recharge', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const { amount, payment_method, description } = req.body;
+        
+        if (!amount || amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '充值金额必须大于0'
+                }
+            });
+        }
+
+        const transaction = await memberService.recharge(phone, amount, payment_method, description);
+        
+        // 更新会员等级
+        await memberService.updateMemberLevel(phone);
+
+        res.json({
+            success: true,
+            transaction,
+            new_balance: transaction.new_balance
+        });
+    } catch (error) {
+        if (error.message === '会员不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '会员不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 会员消费
+router.post('/members/:phone/consume', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const { amount, description } = req.body;
+        
+        if (!amount || amount <= 0) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '消费金额必须大于0'
+                }
+            });
+        }
+
+        const transaction = await memberService.consume(phone, amount, description);
+
+        res.json({
+            success: true,
+            transaction,
+            new_balance: transaction.new_balance,
+            points_earned: transaction.points_earned
+        });
+    } catch (error) {
+        if (error.message === '会员不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '会员不存在'
+                }
+            });
+        }
+        if (error.message === '余额不足') {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INSUFFICIENT_BALANCE',
+                    message: '余额不足'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 获取交易记录
+router.get('/members/:phone/transactions', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const { limit = 50 } = req.query;
+
+        const transactions = await memberService.getTransactionHistory(phone, parseInt(limit));
+
+        res.json({
+            success: true,
+            transactions
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ======================= 病历管理 API =======================
+
+// 通过手机号查询患者信息
+router.get('/patients/phone/:phone', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        
+        if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '请提供有效的手机号'
+                }
+            });
+        }
+
+        const patient = await medicalService.getPatientByPhone(phone);
+
+        res.json({
+            success: true,
+            patient
+        });
+    } catch (error) {
+        if (error.message === '患者不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '患者不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 添加诊断记录
+router.post('/patients/:phone/diagnosis', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const diagnosisData = req.body;
+        
+        // 验证必填字段
+        if (!diagnosisData.visit_date || !diagnosisData.chief_complaint) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '就诊日期和主诉为必填字段'
+                }
+            });
+        }
+
+        const diagnosis = await medicalService.addDiagnosisRecord(phone, diagnosisData);
+
+        res.status(201).json({
+            success: true,
+            diagnosis
+        });
+    } catch (error) {
+        if (error.message === '患者不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '患者不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 获取患者诊断历史
+router.get('/patients/:phone/history', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const { limit = 50 } = req.query;
+
+        const records = await medicalService.getDiagnosisHistory(phone, parseInt(limit));
+
+        res.json({
+            success: true,
+            records
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 更新患者基本信息
+router.put('/patients/:phone', async (req, res, next) => {
+    try {
+        const { phone } = req.params;
+        const updateData = req.body;
+
+        const result = await medicalService.updatePatientInfo(phone, updateData);
+
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        if (error.message === '患者不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '患者不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// 搜索患者
+router.get('/patients/search', async (req, res, next) => {
+    try {
+        const { q, limit = 20 } = req.query;
+        
+        if (!q || q.trim().length < 2) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'INVALID_PARAMS',
+                    message: '搜索关键词至少2个字符'
+                }
+            });
+        }
+
+        const patients = await medicalService.searchPatients(q.trim(), parseInt(limit));
+
+        res.json({
+            success: true,
+            patients
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 获取诊断记录详情
+router.get('/diagnosis/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const record = await medicalService.getDiagnosisRecordDetail(parseInt(id));
+
+        res.json({
+            success: true,
+            record
+        });
+    } catch (error) {
+        if (error.message === '诊断记录不存在') {
+            return res.status(404).json({
+                success: false,
+                error: {
+                    code: 'NOT_FOUND',
+                    message: '诊断记录不存在'
+                }
+            });
+        }
+        next(error);
+    }
+});
+
+// ======================= 统计数据 API =======================
+
+// 会员统计
+router.get('/statistics/members', async (req, res, next) => {
+    try {
+        const db = require('../database/db').getInstance();
+        await db.connect();
+        
+        try {
+            // 会员总数
+            const totalMembers = await db.get('SELECT COUNT(*) as count FROM users WHERE phone IS NOT NULL');
+            
+            // 会员等级分布
+            const levelDistribution = await db.all(`
+                SELECT member_level, COUNT(*) as count 
+                FROM users 
+                WHERE phone IS NOT NULL 
+                GROUP BY member_level
+            `);
+            
+            // 本月新增会员
+            const monthlyNewMembers = await db.get(`
+                SELECT COUNT(*) as count FROM users 
+                WHERE phone IS NOT NULL 
+                AND created_at >= date('now', 'start of month')
+            `);
+            
+            // 总余额
+            const totalBalance = await db.get('SELECT SUM(balance) as total FROM users WHERE phone IS NOT NULL');
+            
+            res.json({
+                success: true,
+                statistics: {
+                    total_members: totalMembers.count,
+                    monthly_new_members: monthlyNewMembers.count,
+                    total_balance: totalBalance.total || 0,
+                    level_distribution: levelDistribution
+                }
+            });
+        } finally {
+            // Don't close the connection with persistent pool
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 病历统计
+router.get('/statistics/medical', async (req, res, next) => {
+    try {
+        const statistics = await medicalService.getPatientStatistics();
+
+        res.json({
+            success: true,
+            statistics
+        });
     } catch (error) {
         next(error);
     }
