@@ -538,6 +538,7 @@ router.post('/members/:phone/consume', async (req, res, next) => {
         res.json({
             success: true,
             transaction,
+            amount: transaction.amount,
             new_balance: transaction.new_balance,
             points_earned: transaction.points_earned
         });

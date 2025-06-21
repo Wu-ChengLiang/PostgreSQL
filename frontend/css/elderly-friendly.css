@@ -1,0 +1,490 @@
+/* 适合老年人使用的界面样式 */
+
+/* 大字体和高对比度 */
+.form-label-large {
+    font-size: 18px !important;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control-large {
+    font-size: 16px !important;
+    padding: 12px 16px !important;
+    height: auto !important;
+    min-height: 48px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.form-control-large:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* 大按钮样式 */
+.btn-large {
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+    min-height: 48px;
+    border-radius: 8px;
+    font-weight: bold;
+    min-width: 120px;
+    margin: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-large:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-primary.btn-large {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary.btn-large:hover {
+    background-color: #0056b3;
+}
+
+.btn-success.btn-large {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success.btn-large:hover {
+    background-color: #1e7e34;
+}
+
+.btn-warning.btn-large {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning.btn-large:hover {
+    background-color: #e0a800;
+}
+
+.btn-info.btn-large {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info.btn-large:hover {
+    background-color: #117a8b;
+}
+
+.btn-secondary.btn-large {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary.btn-large:hover {
+    background-color: #545b62;
+}
+
+/* 搜索框样式 */
+.member-search-box, .medical-search-box {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.search-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.search-input-group input {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* 会员详情卡片 */
+.member-details-card, .patient-info-card {
+    background: white;
+    border: 2px solid #28a745;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.member-info-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.member-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 20px;
+}
+
+.member-basic-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.member-phone {
+    font-size: 18px;
+    color: #666;
+    margin: 0;
+}
+
+.member-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-value.balance {
+    color: #28a745;
+}
+
+.stat-value.points {
+    color: #ffc107;
+}
+
+.stat-value.level {
+    color: #007bff;
+}
+
+/* 会员等级徽章 */
+.member-level-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.member-level-badge.normal {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.member-level-badge.silver {
+    background-color: #c0c0c0;
+    color: #333;
+}
+
+.member-level-badge.gold {
+    background-color: #ffd700;
+    color: #333;
+}
+
+.member-level-badge.diamond {
+    background-color: #b9f2ff;
+    color: #0c5460;
+}
+
+/* 操作按钮组 */
+.member-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0;
+    justify-content: center;
+}
+
+/* 交易记录列表 */
+.transaction-history {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-top: 24px;
+}
+
+.transaction-header {
+    background: #f8f9fa;
+    padding: 16px 20px;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.transaction-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-type {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.transaction-type.RECHARGE {
+    color: #28a745;
+}
+
+.transaction-type.CONSUME {
+    color: #dc3545;
+}
+
+.transaction-desc {
+    color: #666;
+    font-size: 14px;
+}
+
+.transaction-amount {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.transaction-amount.positive {
+    color: #28a745;
+}
+
+.transaction-amount.negative {
+    color: #dc3545;
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: #999;
+    text-align: right;
+}
+
+/* 病历记录样式 */
+.medical-history-list {
+    margin-top: 24px;
+}
+
+.medical-record-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.medical-record-header {
+    background: #f8f9fa;
+    padding: 16px 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.medical-record-date {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.medical-record-id {
+    font-size: 12px;
+    color: #666;
+}
+
+.medical-record-content {
+    padding: 20px;
+}
+
+.medical-field {
+    margin-bottom: 16px;
+}
+
+.medical-field-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 6px;
+}
+
+.medical-field-value {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+}
+
+/* 模态框样式调整 */
+.modal-large .modal-content {
+    max-width: 800px;
+    width: 90%;
+}
+
+.modal-title {
+    font-size: 24px;
+    margin-bottom: 24px;
+    color: #333;
+    text-align: center;
+}
+
+.member-info-display {
+    background: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.member-info-display h4 {
+    margin: 0 0 8px 0;
+    color: #155724;
+}
+
+.member-info-display p {
+    margin: 4px 0;
+    color: #155724;
+}
+
+/* 折扣信息显示 */
+.discount-info {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.discount-info h5 {
+    margin: 0 0 8px 0;
+    color: #856404;
+}
+
+.discount-info p {
+    margin: 4px 0;
+    color: #856404;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .search-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-label {
+        min-width: auto;
+    }
+    
+    .member-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .member-actions {
+        flex-direction: column;
+    }
+    
+    .btn-large {
+        width: 100%;
+        margin: 4px 0;
+    }
+    
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .transaction-amount,
+    .transaction-date {
+        text-align: left;
+    }
+}
+
+/* 无障碍设计 */
+.btn-large:focus,
+.form-control-large:focus {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* 加载状态 */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+.loading::before {
+    content: "⏳ ";
+    font-size: 20px;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+.empty-state::before {
+    content: "📝 ";
+    font-size: 24px;
+    display: block;
+    margin-bottom: 12px;
+} 

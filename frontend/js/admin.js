@@ -136,6 +136,12 @@ function showSection(section) {
         case 'dashboard':
             loadDashboard();
             break;
+        case 'members':
+            // 会员管理页面，不需要预加载数据
+            break;
+        case 'medical':
+            // 病历管理页面，不需要预加载数据
+            break;
         case 'therapists':
             loadTherapists();
             break;
@@ -155,7 +161,7 @@ function showSection(section) {
 function initializePage() {
     // 从URL hash获取当前应该显示的页面
     const hash = window.location.hash.substring(1); // 去掉 # 号
-    const validSections = ['dashboard', 'therapists', 'appointments', 'stores', 'statistics'];
+    const validSections = ['dashboard', 'members', 'medical', 'therapists', 'appointments', 'stores', 'statistics'];
     
     // 如果hash有效，显示对应页面，否则显示默认的数据概览页面
     const currentSection = validSections.includes(hash) ? hash : 'dashboard';
@@ -170,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 监听浏览器前进后退按钮
     window.addEventListener('hashchange', function() {
         const hash = window.location.hash.substring(1);
-        const validSections = ['dashboard', 'therapists', 'appointments', 'stores', 'statistics'];
+        const validSections = ['dashboard', 'members', 'medical', 'therapists', 'appointments', 'stores', 'statistics'];
         
         if (validSections.includes(hash)) {
             showSection(hash);

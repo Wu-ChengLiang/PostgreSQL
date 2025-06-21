@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="css/style-enhanced.css">
+    <link rel="stylesheet" href="css/elderly-friendly.css">
 </head>
 <body>
     <!-- 登录页面 -->
@@ -48,6 +49,8 @@
             <aside class="sidebar">
                 <ul class="menu">
                     <li><a href="#dashboard" onclick="handleMenuClick(event, 'dashboard')" class="active">数据概览</a></li>
+                    <li><a href="#members" onclick="handleMenuClick(event, 'members')">会员管理</a></li>
+                    <li><a href="#medical" onclick="handleMenuClick(event, 'medical')">病历管理</a></li>
                     <li><a href="#therapists" onclick="handleMenuClick(event, 'therapists')">技师管理</a></li>
                     <li><a href="#appointments" onclick="handleMenuClick(event, 'appointments')">预约管理</a></li>
                     <li><a href="#stores" onclick="handleMenuClick(event, 'stores')">门店管理</a></li>
@@ -77,6 +80,63 @@
                             <h3>门店数量</h3>
                             <div class="stat-number" id="totalStores">-</div>
                         </div>
+                    </div>
+                </section>
+
+                <!-- 会员管理 -->
+                <section id="membersSection" class="content-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>会员管理</h2>
+                        <button class="btn btn-primary btn-large" onclick="openAddMemberModal()">📱 新增会员</button>
+                    </div>
+                    
+                    <div class="member-search-box">
+                        <div class="search-input-group">
+                            <label for="memberPhoneSearch" class="search-label">手机号查询：</label>
+                            <input type="tel" id="memberPhoneSearch" class="form-control form-control-large" 
+                                   placeholder="输入11位手机号码" maxlength="11">
+                            <button class="btn btn-primary btn-large" onclick="searchMemberByPhone()">🔍 查询</button>
+                        </div>
+                    </div>
+                    
+                    <div id="memberDetails" class="member-details-card" style="display: none;">
+                        <!-- 会员详细信息卡片 -->
+                    </div>
+                    
+                    <div class="member-actions" id="memberActions" style="display: none;">
+                        <button class="btn btn-success btn-large" onclick="openRechargeModal()">💰 充值</button>
+                        <button class="btn btn-warning btn-large" onclick="openConsumeModal()">🛒 消费</button>
+                        <button class="btn btn-info btn-large" onclick="viewTransactionHistory()">📋 交易记录</button>
+                        <button class="btn btn-secondary btn-large" onclick="editMemberInfo()">✏️ 编辑资料</button>
+                    </div>
+                    
+                    <div id="transactionHistory" class="transaction-history" style="display: none;">
+                        <!-- 交易记录列表 -->
+                    </div>
+                </section>
+
+                <!-- 病历管理 -->
+                <section id="medicalSection" class="content-section" style="display: none;">
+                    <div class="section-header">
+                        <h2>病历管理</h2>
+                        <button class="btn btn-primary btn-large" onclick="openAddDiagnosisModal()">🏥 新增病历</button>
+                    </div>
+                    
+                    <div class="medical-search-box">
+                        <div class="search-input-group">
+                            <label for="patientPhoneSearch" class="search-label">患者手机号：</label>
+                            <input type="tel" id="patientPhoneSearch" class="form-control form-control-large" 
+                                   placeholder="输入11位手机号码" maxlength="11">
+                            <button class="btn btn-primary btn-large" onclick="searchPatientHistory()">🔍 查询病历</button>
+                        </div>
+                    </div>
+                    
+                    <div id="patientInfo" class="patient-info-card" style="display: none;">
+                        <!-- 患者基本信息 -->
+                    </div>
+                    
+                    <div id="medicalHistory" class="medical-history-list">
+                        <!-- 病历记录列表 -->
                     </div>
                 </section>
 
@@ -383,7 +443,188 @@
         </div>
     </div>
 
+    <!-- 新增会员模态框 -->
+    <div id="addMemberModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeAddMemberModal()">&times;</span>
+            <h2 class="modal-title">📱 新增会员</h2>
+            <form id="addMemberForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberName" class="form-label-large">姓名 *</label>
+                        <input type="text" id="memberName" class="form-control form-control-large" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberPhone" class="form-label-large">手机号 *</label>
+                        <input type="tel" id="memberPhone" class="form-control form-control-large" 
+                               placeholder="11位手机号码" maxlength="11" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberGender" class="form-label-large">性别</label>
+                        <select id="memberGender" class="form-control form-control-large">
+                            <option value="male">男</option>
+                            <option value="female">女</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberAge" class="form-label-large">年龄</label>
+                        <input type="number" id="memberAge" class="form-control form-control-large" min="1" max="120">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="memberAddress" class="form-label-large">联系地址</label>
+                    <input type="text" id="memberAddress" class="form-control form-control-large">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberEmergencyName" class="form-label-large">紧急联系人</label>
+                        <input type="text" id="memberEmergencyName" class="form-control form-control-large">
+                    </div>
+                    <div class="form-group">
+                        <label for="memberEmergencyPhone" class="form-label-large">紧急联系电话</label>
+                        <input type="tel" id="memberEmergencyPhone" class="form-control form-control-large">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeAddMemberModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-large">添加会员</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 充值模态框 -->
+    <div id="rechargeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRechargeModal()">&times;</span>
+            <h2 class="modal-title">💰 会员充值</h2>
+            <form id="rechargeForm">
+                <div class="member-info-display" id="rechargeModalMemberInfo">
+                    <!-- 显示会员信息 -->
+                </div>
+                <div class="form-group">
+                    <label for="rechargeAmount" class="form-label-large">充值金额 *</label>
+                    <input type="number" id="rechargeAmount" class="form-control form-control-large" 
+                           min="1" step="0.01" placeholder="请输入充值金额" required>
+                </div>
+                <div class="form-group">
+                    <label for="rechargeMethod" class="form-label-large">支付方式</label>
+                    <select id="rechargeMethod" class="form-control form-control-large">
+                        <option value="CASH">现金</option>
+                        <option value="WECHAT">微信支付</option>
+                        <option value="ALIPAY">支付宝</option>
+                        <option value="CARD">银行卡</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rechargeDescription" class="form-label-large">备注</label>
+                    <input type="text" id="rechargeDescription" class="form-control form-control-large" 
+                           placeholder="充值备注（可选）">
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeRechargeModal()">取消</button>
+                    <button type="submit" class="btn btn-success btn-large">确认充值</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 消费模态框 -->
+    <div id="consumeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeConsumeModal()">&times;</span>
+            <h2 class="modal-title">🛒 会员消费</h2>
+            <form id="consumeForm">
+                <div class="member-info-display" id="consumeModalMemberInfo">
+                    <!-- 显示会员信息 -->
+                </div>
+                <div class="form-group">
+                    <label for="consumeAmount" class="form-label-large">消费金额 *</label>
+                    <input type="number" id="consumeAmount" class="form-control form-control-large" 
+                           min="1" step="0.01" placeholder="请输入消费金额" required>
+                </div>
+                <div class="form-group">
+                    <label for="consumeServiceType" class="form-label-large">服务类型</label>
+                    <select id="consumeServiceType" class="form-control form-control-large">
+                        <option value="中医推拿">中医推拿</option>
+                        <option value="艾灸调理">艾灸调理</option>
+                        <option value="经络疏通">经络疏通</option>
+                        <option value="拔罐刮痧">拔罐刮痧</option>
+                        <option value="足疗按摩">足疗按摩</option>
+                        <option value="其他服务">其他服务</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="consumeDescription" class="form-label-large">服务描述</label>
+                    <input type="text" id="consumeDescription" class="form-control form-control-large" 
+                           placeholder="服务详细描述（可选）">
+                </div>
+                <div class="discount-info" id="discountInfo">
+                    <!-- 显示折扣信息 -->
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeConsumeModal()">取消</button>
+                    <button type="submit" class="btn btn-warning btn-large">确认消费</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 新增病历模态框 -->
+    <div id="addDiagnosisModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeAddDiagnosisModal()">&times;</span>
+            <h2 class="modal-title">🏥 新增病历</h2>
+            <form id="addDiagnosisForm">
+                <div class="form-group">
+                    <label for="diagnosisPatientPhone" class="form-label-large">患者手机号 *</label>
+                    <input type="tel" id="diagnosisPatientPhone" class="form-control form-control-large" 
+                           placeholder="11位手机号码" maxlength="11" required>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisVisitDate" class="form-label-large">就诊日期 *</label>
+                    <input type="date" id="diagnosisVisitDate" class="form-control form-control-large" required>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisComplaint" class="form-label-large">主诉 *</label>
+                    <textarea id="diagnosisComplaint" class="form-control form-control-large" rows="3" 
+                              placeholder="患者主要症状和不适" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisTcm" class="form-label-large">中医诊断 *</label>
+                    <textarea id="diagnosisTcm" class="form-control form-control-large" rows="3" 
+                              placeholder="中医诊断结果" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisTreatment" class="form-label-large">治疗方案 *</label>
+                    <textarea id="diagnosisTreatment" class="form-control form-control-large" rows="3" 
+                              placeholder="治疗计划和建议" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisTherapist" class="form-label-large">主治医师</label>
+                    <select id="diagnosisTherapist" class="form-control form-control-large">
+                        <option value="">请选择医师</option>
+                        <!-- 动态加载医师列表 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="diagnosisNotes" class="form-label-large">备注</label>
+                    <textarea id="diagnosisNotes" class="form-control form-control-large" rows="2" 
+                              placeholder="其他备注信息"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeAddDiagnosisModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-large">保存病历</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/utils.js"></script>
     <script src="js/admin.js"></script>
+    <script src="js/member-management.js"></script>
+    <script src="js/medical-management.js"></script>
 </body>
 </html>
