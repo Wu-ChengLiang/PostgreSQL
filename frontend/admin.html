@@ -143,65 +143,108 @@
                 <!-- 技师管理 -->
                 <section id="therapistsSection" class="content-section" style="display: none;">
                     <div class="section-header">
-                        <h2>技师管理</h2>
-                        <button class="btn btn-primary" onclick="openAddTherapistModal()">添加技师</button>
+                        <h2>👨‍⚕️ 技师管理</h2>
+                        <button class="btn btn-primary btn-large" onclick="openAddTherapistModal()">➕ 新增技师</button>
                     </div>
                     
-                    <div class="filters">
-                        <select id="filterStore" class="form-control" onchange="loadTherapists()">
-                            <option value="">所有门店</option>
-                        </select>
+                    <div class="therapist-search-box">
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label for="therapistStoreFilter" class="filter-label">🏪 所属门店：</label>
+                                <select id="therapistStoreFilter" class="form-control form-control-large" onchange="searchTherapists()">
+                                    <option value="">🔍 所有门店</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="therapistPositionFilter" class="filter-label">👔 职位筛选：</label>
+                                <select id="therapistPositionFilter" class="form-control form-control-large" onchange="searchTherapists()">
+                                    <option value="">🔍 所有职位</option>
+                                    <option value="调理师">👨‍⚕️ 调理师</option>
+                                    <option value="推拿师">🤲 推拿师</option>
+                                    <option value="艾灸师">🔥 艾灸师</option>
+                                    <option value="专家医师">👨‍⚕️ 专家医师</option>
+                                    <option value="健康管理师">📋 健康管理师</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="therapistSearchInput" class="filter-label">🔍 技师搜索：</label>
+                                <input type="text" id="therapistSearchInput" class="form-control form-control-large" 
+                                       placeholder="输入技师姓名或专长..." onkeyup="searchTherapists()">
+                            </div>
+                            <div class="filter-buttons">
+                                <button class="btn btn-primary btn-large" onclick="searchTherapists()">🔍 搜索</button>
+                                <button class="btn btn-secondary btn-large" onclick="loadTherapists()">🔄 刷新</button>
+                                <button class="btn btn-info btn-large" onclick="showTherapistStats()">📊 统计</button>
+                            </div>
+                        </div>
                     </div>
                     
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>姓名</th>
-                                <th>职位</th>
-                                <th>门店</th>
-                                <th>从业年限</th>
-                                <th>专长</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="therapistTableBody">
-                            <!-- 动态生成 -->
-                        </tbody>
-                    </table>
+                    <div id="therapistsList" class="therapists-grid">
+                        <!-- 动态生成 -->
+                    </div>
+                    
+                    <div id="therapistStatsModal" class="modal" style="display: none;">
+                        <div class="modal-content modal-large">
+                            <span class="close" onclick="closeTherapistStatsModal()">&times;</span>
+                            <h2 class="modal-title">📊 技师统计</h2>
+                            <div id="therapistStatsContent">
+                                <!-- 动态生成 -->
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 预约管理 -->
                 <section id="appointmentsSection" class="content-section" style="display: none;">
-                    <h2>预约管理</h2>
-                    
-                    <div class="filters">
-                        <input type="date" id="filterDate" class="form-control" onchange="loadAppointments()">
-                        <select id="filterStatus" class="form-control" onchange="loadAppointments()">
-                            <option value="">所有状态</option>
-                            <option value="pending">待确认</option>
-                            <option value="confirmed">已确认</option>
-                            <option value="completed">已完成</option>
-                            <option value="cancelled">已取消</option>
-                        </select>
+                    <div class="section-header">
+                        <h2>📅 预约管理</h2>
+                        <button class="btn btn-primary btn-large" onclick="openAddAppointmentModal()">➕ 新增预约</button>
                     </div>
                     
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>预约时间</th>
-                                <th>客户姓名</th>
-                                <th>联系电话</th>
-                                <th>技师</th>
-                                <th>门店</th>
-                                <th>状态</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="appointmentTableBody">
-                            <!-- 动态生成 -->
-                        </tbody>
-                    </table>
+                    <div class="appointment-search-box">
+                        <div class="search-filters">
+                            <div class="filter-group">
+                                <label for="appointmentDateFilter" class="filter-label">📅 预约日期：</label>
+                                <input type="date" id="appointmentDateFilter" class="form-control form-control-large" 
+                                       onchange="searchAppointments()">
+                            </div>
+                            <div class="filter-group">
+                                <label for="appointmentStatusFilter" class="filter-label">📋 预约状态：</label>
+                                <select id="appointmentStatusFilter" class="form-control form-control-large" 
+                                        onchange="searchAppointments()">
+                                    <option value="">🔍 所有状态</option>
+                                    <option value="pending">⏳ 待确认</option>
+                                    <option value="confirmed">✅ 已确认</option>
+                                    <option value="completed">✨ 已完成</option>
+                                    <option value="cancelled">❌ 已取消</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="appointmentSearchInput" class="filter-label">🔍 客户搜索：</label>
+                                <input type="text" id="appointmentSearchInput" class="form-control form-control-large" 
+                                       placeholder="输入客户姓名或电话..." onkeyup="searchAppointments()">
+                            </div>
+                            <div class="filter-buttons">
+                                <button class="btn btn-primary btn-large" onclick="searchAppointments()">🔍 搜索</button>
+                                <button class="btn btn-secondary btn-large" onclick="loadAppointments()">🔄 刷新</button>
+                                <button class="btn btn-info btn-large" onclick="showAppointmentStats()">📊 统计</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="appointmentsList" class="appointments-grid">
+                        <!-- 动态生成 -->
+                    </div>
+                    
+                    <div id="appointmentStatsModal" class="modal" style="display: none;">
+                        <div class="modal-content modal-large">
+                            <span class="close" onclick="closeAppointmentStatsModal()">&times;</span>
+                            <h2 class="modal-title">📊 预约统计</h2>
+                            <div id="appointmentStatsContent">
+                                <!-- 动态生成 -->
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 门店管理 -->
@@ -247,47 +290,62 @@
 
     <!-- 添加技师模态框 -->
     <div id="addTherapistModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content modal-large">
             <span class="close" onclick="closeAddTherapistModal()">&times;</span>
-            <h2>添加技师</h2>
+            <h2 class="modal-title">➕ 新增技师</h2>
             <form id="addTherapistForm">
-                <div class="form-group">
-                    <label for="therapistStore">所属门店 *</label>
-                    <select id="therapistStore" class="form-control" required>
-                        <option value="">请选择门店</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="therapistName" class="form-label-large">👤 技师姓名 *</label>
+                        <input type="text" id="therapistName" class="form-control form-control-large" 
+                               placeholder="请输入技师姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="therapistStore" class="form-label-large">🏪 所属门店 *</label>
+                        <select id="therapistStore" class="form-control form-control-large" required>
+                            <option value="">请选择门店</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="therapistPosition" class="form-label-large">👔 职位 *</label>
+                        <select id="therapistPosition" class="form-control form-control-large" required>
+                            <option value="">请选择职位</option>
+                            <option value="调理师">👨‍⚕️ 调理师</option>
+                            <option value="推拿师">🤲 推拿师</option>
+                            <option value="艾灸师">🔥 艾灸师</option>
+                            <option value="专家医师">👨‍⚕️ 专家医师</option>
+                            <option value="健康管理师">📋 健康管理师</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="therapistExperience" class="form-label-large">📅 从业年限 *</label>
+                        <input type="number" id="therapistExperience" class="form-control form-control-large" 
+                               min="1" placeholder="请输入从业年限" required>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="therapistName">姓名 *</label>
-                    <input type="text" id="therapistName" class="form-control" required>
+                    <label for="therapistSpecialties" class="form-label-large">💪 专业技能 *</label>
+                    <input type="text" id="therapistSpecialties" class="form-control form-control-large" 
+                           placeholder="如：颈肩调理，腰腿保健，经络疏通（多个用逗号分隔）" required>
                 </div>
-                <div class="form-group">
-                    <label for="therapistPosition">职位 *</label>
-                    <select id="therapistPosition" class="form-control" required>
-                        <option value="调理师">调理师</option>
-                        <option value="推拿师">推拿师</option>
-                        <option value="艾灸师">艾灸师</option>
-                        <option value="专家医师">专家医师</option>
-                        <option value="健康管理师">健康管理师</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="therapistPhone" class="form-label-large">📞 联系电话</label>
+                        <input type="tel" id="therapistPhone" class="form-control form-control-large" 
+                               placeholder="请输入联系电话">
+                    </div>
+                    <div class="form-group">
+                        <label for="therapistHonors" class="form-label-large">🏆 荣誉称号</label>
+                        <input type="text" id="therapistHonors" class="form-control form-control-large" 
+                               placeholder="如：高级技师，金牌调理师等">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="therapistExperience">从业年限 *</label>
-                    <input type="number" id="therapistExperience" class="form-control" min="1" required>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeAddTherapistModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-large">添加技师</button>
                 </div>
-                <div class="form-group">
-                    <label for="therapistSpecialties">专长 * (多个用逗号分隔)</label>
-                    <input type="text" id="therapistSpecialties" class="form-control" placeholder="如：按摩，经络疏通，艾灸" required>
-                </div>
-                <div class="form-group">
-                    <label for="therapistPhone">联系电话</label>
-                    <input type="tel" id="therapistPhone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="therapistHonors">荣誉称号</label>
-                    <input type="text" id="therapistHonors" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">添加</button>
             </form>
         </div>
     </div>
@@ -343,6 +401,163 @@
                     </select>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">更新</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加预约模态框 -->
+    <div id="addAppointmentModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeAddAppointmentModal()">&times;</span>
+            <h2 class="modal-title">➕ 新增预约</h2>
+            <form id="addAppointmentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointmentCustomerName" class="form-label-large">👤 客户姓名 *</label>
+                        <input type="text" id="appointmentCustomerName" class="form-control form-control-large" 
+                               placeholder="请输入客户姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentCustomerPhone" class="form-label-large">📞 联系电话 *</label>
+                        <input type="tel" id="appointmentCustomerPhone" class="form-control form-control-large" 
+                               placeholder="请输入手机号码" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointmentStore" class="form-label-large">🏪 选择门店 *</label>
+                        <select id="appointmentStore" class="form-control form-control-large" 
+                                onchange="loadStoreTherapistsForAppointment()" required>
+                            <option value="">请选择门店</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTherapist" class="form-label-large">👨‍⚕️ 选择技师 *</label>
+                        <select id="appointmentTherapist" class="form-control form-control-large" required>
+                            <option value="">请先选择门店</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointmentDate" class="form-label-large">📅 预约日期 *</label>
+                        <input type="date" id="appointmentDate" class="form-control form-control-large" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTime" class="form-label-large">🕐 预约时间 *</label>
+                        <select id="appointmentTime" class="form-control form-control-large" required>
+                            <option value="">请选择时间</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                            <option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentService" class="form-label-large">💆 服务项目 *</label>
+                    <select id="appointmentService" class="form-control form-control-large" required>
+                        <option value="">请选择服务项目</option>
+                        <option value="推拿按摩">推拿按摩</option>
+                        <option value="经络疏通">经络疏通</option>
+                        <option value="艾灸调理">艾灸调理</option>
+                        <option value="拔罐理疗">拔罐理疗</option>
+                        <option value="颈肩调理">颈肩调理</option>
+                        <option value="腰腿保健">腰腿保健</option>
+                        <option value="养生保健">养生保健</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentNotes" class="form-label-large">📝 备注信息</label>
+                    <textarea id="appointmentNotes" class="form-control form-control-large" rows="3" 
+                              placeholder="健康状况、特殊要求等备注信息（可选）"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeAddAppointmentModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-large">创建预约</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑预约模态框 -->
+    <div id="editAppointmentModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close" onclick="closeEditAppointmentModal()">&times;</span>
+            <h2 class="modal-title">✏️ 编辑预约</h2>
+            <form id="editAppointmentForm">
+                <input type="hidden" id="editAppointmentId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editAppointmentCustomerName" class="form-label-large">👤 客户姓名 *</label>
+                        <input type="text" id="editAppointmentCustomerName" class="form-control form-control-large" 
+                               placeholder="请输入客户姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAppointmentCustomerPhone" class="form-label-large">📞 联系电话 *</label>
+                        <input type="tel" id="editAppointmentCustomerPhone" class="form-control form-control-large" 
+                               placeholder="请输入手机号码" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editAppointmentDate" class="form-label-large">📅 预约日期 *</label>
+                        <input type="date" id="editAppointmentDate" class="form-control form-control-large" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editAppointmentTime" class="form-label-large">🕐 预约时间 *</label>
+                        <select id="editAppointmentTime" class="form-control form-control-large" required>
+                            <option value="">请选择时间</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                            <option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editAppointmentService" class="form-label-large">💆 服务项目 *</label>
+                    <select id="editAppointmentService" class="form-control form-control-large" required>
+                        <option value="">请选择服务项目</option>
+                        <option value="推拿按摩">推拿按摩</option>
+                        <option value="经络疏通">经络疏通</option>
+                        <option value="艾灸调理">艾灸调理</option>
+                        <option value="拔罐理疗">拔罐理疗</option>
+                        <option value="颈肩调理">颈肩调理</option>
+                        <option value="腰腿保健">腰腿保健</option>
+                        <option value="养生保健">养生保健</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editAppointmentStatus" class="form-label-large">📋 预约状态</label>
+                    <select id="editAppointmentStatus" class="form-control form-control-large">
+                        <option value="pending">⏳ 待确认</option>
+                        <option value="confirmed">✅ 已确认</option>
+                        <option value="completed">✨ 已完成</option>
+                        <option value="cancelled">❌ 已取消</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editAppointmentNotes" class="form-label-large">📝 备注信息</label>
+                    <textarea id="editAppointmentNotes" class="form-control form-control-large" rows="3" 
+                              placeholder="健康状况、特殊要求等备注信息"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary btn-large" onclick="closeEditAppointmentModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-large">更新预约</button>
+                </div>
             </form>
         </div>
     </div>

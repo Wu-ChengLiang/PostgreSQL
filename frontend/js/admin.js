@@ -248,36 +248,82 @@ async function loadStoresForFilter() {
 
 // 加载技师列表
 async function loadTherapists() {
-    const storeId = document.getElementById('filterStore').value;
-    const params = new URLSearchParams();
-    if (storeId) params.append('store_id', storeId);
-    
     try {
-        const data = await apiRequest(`${API_BASE_URL}/therapists?${params}`);
+        showLoading('正在加载技师列表...');
+        
+        const data = await apiRequest(`${API_BASE_URL}/therapists`);
         
         if (data.success) {
-            const tbody = document.getElementById('therapistTableBody');
-            tbody.innerHTML = '';
+            const therapists = data.data?.therapists || [];
+            const therapistsList = document.getElementById('therapistsList');
             
-            data.data.therapists.forEach(therapist => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${therapist.name}</td>
-                    <td>${therapist.position}</td>
-                    <td>${therapist.store_name}</td>
-                    <td>${therapist.experience_years}年</td>
-                    <td>${therapist.specialties.join('、')}</td>
-                    <td><span class="status-badge status-${therapist.status}">${therapist.status === 'active' ? '在职' : '离职'}</span></td>
-                    <td class="action-buttons">
-                        <button class="btn btn-sm btn-edit" onclick="editTherapist(${therapist.id})">编辑</button>
-                        <button class="btn btn-sm btn-delete" onclick="deleteTherapist(${therapist.id})">删除</button>
-                    </td>
+            if (therapists.length === 0) {
+                therapistsList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>👨‍⚕️ 暂无技师</h3>
+                        <p>点击"新增技师"按钮添加第一位技师</p>
+                    </div>
                 `;
-                tbody.appendChild(row);
-            });
+                hideLoading();
+                return;
+            }
+            
+            therapistsList.innerHTML = therapists.map(therapist => `
+                <div class="therapist-card elderly-friendly">
+                    <div class="therapist-header">
+                        <div class="therapist-name-section">
+                            <h3 class="therapist-name">👤 ${therapist.name}</h3>
+                            <span class="therapist-position">${getPositionIcon(therapist.position)} ${therapist.position}</span>
+                        </div>
+                        <span class="therapist-status-badge status-${therapist.status || 'active'}">${getTherapistStatusText(therapist.status || 'active')}</span>
+                    </div>
+                    <div class="therapist-info">
+                        <div class="info-item">
+                            <span class="info-label">🏪 所属门店：</span>
+                            <span class="info-value">${therapist.store_name || '未设置'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📅 从业年限：</span>
+                            <span class="info-value">${therapist.experience_years || therapist.years_of_experience || 0}年</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">💪 专业技能：</span>
+                            <span class="info-value">${Array.isArray(therapist.specialties) ? therapist.specialties.join('、') : (therapist.specialties || '未设置')}</span>
+                        </div>
+                        ${therapist.phone ? `
+                        <div class="info-item">
+                            <span class="info-label">📞 联系电话：</span>
+                            <span class="info-value">${therapist.phone}</span>
+                        </div>
+                        ` : ''}
+                        ${therapist.honors ? `
+                        <div class="info-item">
+                            <span class="info-label">🏆 荣誉称号：</span>
+                            <span class="info-value">${therapist.honors}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="therapist-actions">
+                        <button class="btn btn-primary btn-large" onclick="editTherapist(${therapist.id})">✏️ 编辑</button>
+                        <button class="btn btn-info btn-large" onclick="viewTherapistAppointments(${therapist.id})">📅 预约记录</button>
+                        <button class="btn btn-warning btn-large" onclick="viewTherapistStats(${therapist.id})">📊 工作统计</button>
+                        <button class="btn btn-danger btn-large" onclick="deleteTherapist(${therapist.id})">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 加载门店列表到筛选器
+            loadStoresForTherapistFilter();
+            
+            showMessage(`✅ 成功加载 ${therapists.length} 位技师`, 'success');
+        } else {
+            showMessage('❌ 加载技师列表失败', 'error');
         }
     } catch (error) {
         console.error('加载技师列表失败:', error);
+        showMessage('❌ 加载技师列表失败，请稍后重试', 'error');
+    } finally {
+        hideLoading();
     }
 }
 
@@ -442,52 +488,146 @@ async function deleteTherapist(id) {
 
 // 加载预约列表
 async function loadAppointments() {
-    const date = document.getElementById('filterDate').value;
-    const status = document.getElementById('filterStatus').value;
-    
-    const params = new URLSearchParams();
-    if (date) params.append('date', date);
-    if (status) params.append('status', status);
-    
     try {
-        const data = await apiRequest(`${API_BASE_URL}/appointments?${params}`);
+        showLoading('正在加载预约列表...');
+        
+        // 使用正确的API路径
+        const data = await apiRequest(`${API_BASE_URL}/appointments`);
         
         if (data.success) {
-            const tbody = document.getElementById('appointmentTableBody');
-            tbody.innerHTML = '';
+            const appointments = data.data?.appointments || [];
+            const appointmentsList = document.getElementById('appointmentsList');
             
-            data.data.appointments.forEach(appointment => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${appointment.appointment_date} ${appointment.start_time}</td>
-                    <td>${appointment.user_name}</td>
-                    <td>${appointment.user_phone || '-'}</td>
-                    <td>${appointment.therapist_name}</td>
-                    <td>${appointment.store_name}</td>
-                    <td><span class="appointment-status status-${appointment.status}">${getStatusText(appointment.status)}</span></td>
-                    <td class="action-buttons">
-                        ${appointment.status === 'pending' ? 
-                            `<button class="btn btn-sm btn-confirm" onclick="updateAppointmentStatus(${appointment.id}, 'confirmed')">确认</button>` : ''}
-                        ${appointment.status === 'confirmed' ? 
-                            `<button class="btn btn-sm btn-confirm" onclick="updateAppointmentStatus(${appointment.id}, 'completed')">完成</button>` : ''}
-                        ${['pending', 'confirmed'].includes(appointment.status) ? 
-                            `<button class="btn btn-sm btn-delete" onclick="updateAppointmentStatus(${appointment.id}, 'cancelled')">取消</button>` : ''}
-                    </td>
+            if (appointments.length === 0) {
+                appointmentsList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📅 暂无预约</h3>
+                        <p>点击"新增预约"按钮添加第一个预约</p>
+                    </div>
                 `;
-                tbody.appendChild(row);
-            });
+                hideLoading();
+                return;
+            }
+            
+            appointmentsList.innerHTML = appointments.map(appointment => `
+                <div class="appointment-card elderly-friendly">
+                    <div class="appointment-header">
+                        <div class="appointment-time">
+                            <span class="appointment-date">📅 ${appointment.appointment_date}</span>
+                            <span class="appointment-time-slot">🕐 ${appointment.start_time}${appointment.end_time ? ` - ${appointment.end_time}` : ''}</span>
+                        </div>
+                        <span class="appointment-status-badge status-${appointment.status}">${getAppointmentStatusText(appointment.status)}</span>
+                    </div>
+                    <div class="appointment-info">
+                        <div class="info-item">
+                            <span class="info-label">👤 客户：</span>
+                            <span class="info-value">${appointment.user_name || appointment.customer_name || '未知'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📞 电话：</span>
+                            <span class="info-value">${appointment.user_phone || appointment.customer_phone || '未设置'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">👨‍⚕️ 技师：</span>
+                            <span class="info-value">${appointment.therapist_name || '未分配'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">🏪 门店：</span>
+                            <span class="info-value">${appointment.store_name || '未设置'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">💆 服务：</span>
+                            <span class="info-value">${appointment.service_type || '未设置'}</span>
+                        </div>
+                        ${appointment.notes ? `
+                        <div class="info-item">
+                            <span class="info-label">📝 备注：</span>
+                            <span class="info-value">${appointment.notes}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="appointment-actions">
+                        <button class="btn btn-primary btn-large" onclick="editAppointment(${appointment.id})">✏️ 编辑</button>
+                        ${appointment.status === 'pending' ? 
+                            `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'confirmed')">✅ 确认</button>` : ''}
+                        ${appointment.status === 'confirmed' ? 
+                            `<button class="btn btn-success btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'completed')">✨ 完成</button>` : ''}
+                        ${['pending', 'confirmed'].includes(appointment.status) ? 
+                            `<button class="btn btn-danger btn-large" onclick="updateAppointmentStatus(${appointment.id}, 'cancelled')">❌ 取消</button>` : ''}
+                        <button class="btn btn-info btn-large" onclick="viewAppointmentDetails(${appointment.id})">👁️ 详情</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            showMessage(`✅ 成功加载 ${appointments.length} 个预约`, 'success');
+        } else {
+            showMessage('❌ 加载预约列表失败', 'error');
         }
     } catch (error) {
         console.error('加载预约列表失败:', error);
+        showMessage('❌ 加载预约列表失败，请稍后重试', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 搜索预约
+function searchAppointments() {
+    const dateFilter = document.getElementById('appointmentDateFilter').value;
+    const statusFilter = document.getElementById('appointmentStatusFilter').value;
+    const searchTerm = document.getElementById('appointmentSearchInput').value.toLowerCase().trim();
+    
+    const appointmentCards = document.querySelectorAll('.appointment-card');
+    let visibleCount = 0;
+    
+    appointmentCards.forEach(card => {
+        let shouldShow = true;
+        
+        // 日期筛选
+        if (dateFilter) {
+            const appointmentDate = card.querySelector('.appointment-date').textContent.replace('📅 ', '');
+            if (appointmentDate !== dateFilter) {
+                shouldShow = false;
+            }
+        }
+        
+        // 状态筛选
+        if (statusFilter && shouldShow) {
+            const statusBadge = card.querySelector('.appointment-status-badge');
+            if (!statusBadge.classList.contains(`status-${statusFilter}`)) {
+                shouldShow = false;
+            }
+        }
+        
+        // 搜索词筛选
+        if (searchTerm && shouldShow) {
+            const cardText = card.textContent.toLowerCase();
+            if (!cardText.includes(searchTerm)) {
+                shouldShow = false;
+            }
+        }
+        
+        if (shouldShow) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    if (visibleCount === 0) {
+        showMessage('❌ 未找到匹配的预约', 'warning');
+    } else {
+        showMessage(`🔍 找到 ${visibleCount} 个匹配的预约`, 'success');
     }
 }
 
 // 更新预约状态
 async function updateAppointmentStatus(id, status) {
     const confirmMessages = {
-        'confirmed': '确定要确认这个预约吗？',
-        'completed': '确定要将这个预约标记为已完成吗？',
-        'cancelled': '确定要取消这个预约吗？'
+        'confirmed': '✅ 确定要确认这个预约吗？',
+        'completed': '✨ 确定要将这个预约标记为已完成吗？',
+        'cancelled': '❌ 确定要取消这个预约吗？'
     };
     
     if (!confirm(confirmMessages[status])) {
@@ -495,6 +635,8 @@ async function updateAppointmentStatus(id, status) {
     }
     
     try {
+        showLoading('正在更新预约状态...');
+        
         const data = await apiRequest(`${API_BASE_URL}/appointments/${id}/status`, {
             method: 'PUT',
             headers: {
@@ -504,14 +646,387 @@ async function updateAppointmentStatus(id, status) {
         });
         
         if (data.success) {
-            showMessage('状态更新成功', 'success');
+            showMessage('✅ 状态更新成功', 'success');
             loadAppointments();
         } else {
-            showMessage(data.error.message || '更新失败', 'error');
+            showMessage(data.error?.message || '❌ 更新失败', 'error');
         }
     } catch (error) {
         console.error('更新预约状态失败:', error);
-        showMessage('更新失败，请稍后重试', 'error');
+        showMessage('❌ 更新失败，请稍后重试', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// 打开新增预约模态框
+function openAddAppointmentModal() {
+    document.getElementById('addAppointmentModal').style.display = 'block';
+    loadStoresForAppointment();
+    
+    // 设置默认日期为今天
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').value = today;
+}
+
+// 关闭新增预约模态框
+function closeAddAppointmentModal() {
+    document.getElementById('addAppointmentModal').style.display = 'none';
+    document.getElementById('addAppointmentForm').reset();
+}
+
+// 为预约加载门店列表
+async function loadStoresForAppointment() {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores`);
+        if (data.success) {
+            const stores = data.data?.stores || [];
+            const storeSelect = document.getElementById('appointmentStore');
+            
+            storeSelect.innerHTML = '<option value="">请选择门店</option>';
+            stores.forEach(store => {
+                storeSelect.innerHTML += `<option value="${store.id}">${store.name}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('加载门店列表失败:', error);
+    }
+}
+
+// 为预约加载门店技师
+async function loadStoreTherapistsForAppointment() {
+    const storeId = document.getElementById('appointmentStore').value;
+    const therapistSelect = document.getElementById('appointmentTherapist');
+    
+    therapistSelect.innerHTML = '<option value="">请先选择门店</option>';
+    
+    if (!storeId) return;
+    
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/therapists?store_id=${storeId}`);
+        if (data.success) {
+            const therapists = data.data?.therapists || [];
+            
+            therapistSelect.innerHTML = '<option value="">请选择技师</option>';
+            therapists.forEach(therapist => {
+                therapistSelect.innerHTML += `<option value="${therapist.id}">${therapist.name} - ${therapist.title || therapist.position || '技师'}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error('加载技师列表失败:', error);
+    }
+}
+
+// 编辑预约
+async function editAppointment(id) {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/appointments/${id}`);
+        if (data.success) {
+            const appointment = data.data?.appointment;
+            
+            // 填充编辑表单
+            document.getElementById('editAppointmentId').value = appointment.id;
+            document.getElementById('editAppointmentCustomerName').value = appointment.user_name || appointment.customer_name || '';
+            document.getElementById('editAppointmentCustomerPhone').value = appointment.user_phone || appointment.customer_phone || '';
+            document.getElementById('editAppointmentDate').value = appointment.appointment_date;
+            document.getElementById('editAppointmentTime').value = appointment.start_time;
+            document.getElementById('editAppointmentService').value = appointment.service_type || '';
+            document.getElementById('editAppointmentStatus').value = appointment.status;
+            document.getElementById('editAppointmentNotes').value = appointment.notes || '';
+            
+            // 显示编辑模态框
+            document.getElementById('editAppointmentModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('获取预约详情失败:', error);
+        showMessage('❌ 获取预约详情失败', 'error');
+    }
+}
+
+// 关闭编辑预约模态框
+function closeEditAppointmentModal() {
+    document.getElementById('editAppointmentModal').style.display = 'none';
+    document.getElementById('editAppointmentForm').reset();
+}
+
+// 查看预约详情
+function viewAppointmentDetails(id) {
+    showMessage('👁️ 预约详情功能开发中...', 'info');
+    // TODO: 实现预约详情功能
+}
+
+// 显示预约统计
+function showAppointmentStats() {
+    document.getElementById('appointmentStatsModal').style.display = 'block';
+    loadAppointmentStats();
+}
+
+// 关闭预约统计模态框
+function closeAppointmentStatsModal() {
+    document.getElementById('appointmentStatsModal').style.display = 'none';
+}
+
+// 加载预约统计
+async function loadAppointmentStats() {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/appointments`);
+        if (data.success) {
+            const appointments = data.data?.appointments || [];
+            
+            // 统计各种状态的预约数量
+            const stats = {
+                total: appointments.length,
+                pending: appointments.filter(a => a.status === 'pending').length,
+                confirmed: appointments.filter(a => a.status === 'confirmed').length,
+                completed: appointments.filter(a => a.status === 'completed').length,
+                cancelled: appointments.filter(a => a.status === 'cancelled').length
+            };
+            
+            // 今日预约统计
+            const today = new Date().toISOString().split('T')[0];
+            const todayAppointments = appointments.filter(a => a.appointment_date === today);
+            
+            document.getElementById('appointmentStatsContent').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>📊 总预约数</h3>
+                        <div class="stat-value">${stats.total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>⏳ 待确认</h3>
+                        <div class="stat-value">${stats.pending}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>✅ 已确认</h3>
+                        <div class="stat-value">${stats.confirmed}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>✨ 已完成</h3>
+                        <div class="stat-value">${stats.completed}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>❌ 已取消</h3>
+                        <div class="stat-value">${stats.cancelled}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📅 今日预约</h3>
+                        <div class="stat-value">${todayAppointments.length}</div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('加载预约统计失败:', error);
+        document.getElementById('appointmentStatsContent').innerHTML = '<p>❌ 加载统计数据失败</p>';
+    }
+}
+
+// 获取预约状态文本
+function getAppointmentStatusText(status) {
+    const statusMap = {
+        'pending': '⏳ 待确认',
+        'confirmed': '✅ 已确认',
+        'completed': '✨ 已完成',
+        'cancelled': '❌ 已取消'
+    };
+    return statusMap[status] || status;
+}
+
+// 搜索技师
+function searchTherapists() {
+    const storeFilter = document.getElementById('therapistStoreFilter').value;
+    const positionFilter = document.getElementById('therapistPositionFilter').value;
+    const searchTerm = document.getElementById('therapistSearchInput').value.toLowerCase().trim();
+    
+    const therapistCards = document.querySelectorAll('.therapist-card');
+    let visibleCount = 0;
+    
+    therapistCards.forEach(card => {
+        let shouldShow = true;
+        
+        // 门店筛选
+        if (storeFilter && shouldShow) {
+            const storeName = card.querySelector('.info-value').textContent.toLowerCase();
+            if (!storeName.includes(storeFilter.toLowerCase())) {
+                shouldShow = false;
+            }
+        }
+        
+        // 职位筛选
+        if (positionFilter && shouldShow) {
+            const positionElement = card.querySelector('.therapist-position');
+            if (!positionElement.textContent.includes(positionFilter)) {
+                shouldShow = false;
+            }
+        }
+        
+        // 搜索词筛选
+        if (searchTerm && shouldShow) {
+            const cardText = card.textContent.toLowerCase();
+            if (!cardText.includes(searchTerm)) {
+                shouldShow = false;
+            }
+        }
+        
+        if (shouldShow) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    if (visibleCount === 0) {
+        showMessage('❌ 未找到匹配的技师', 'warning');
+    } else {
+        showMessage(`🔍 找到 ${visibleCount} 位匹配的技师`, 'success');
+    }
+}
+
+// 为技师筛选器加载门店列表
+async function loadStoresForTherapistFilter() {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/stores`);
+        if (data.success) {
+            const stores = data.data?.stores || [];
+            const storeSelect = document.getElementById('therapistStoreFilter');
+            
+            // 保留原有的"所有门店"选项
+            const currentValue = storeSelect.value;
+            storeSelect.innerHTML = '<option value="">🔍 所有门店</option>';
+            
+            stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.name;
+                option.textContent = store.name;
+                storeSelect.appendChild(option);
+            });
+            
+            // 恢复之前的选择
+            storeSelect.value = currentValue;
+        }
+    } catch (error) {
+        console.error('加载门店列表失败:', error);
+    }
+}
+
+// 获取职位图标
+function getPositionIcon(position) {
+    const iconMap = {
+        '调理师': '👨‍⚕️',
+        '推拿师': '🤲',
+        '艾灸师': '🔥',
+        '专家医师': '👨‍⚕️',
+        '健康管理师': '📋',
+        '按摩师': '💆‍♂️'
+    };
+    return iconMap[position] || '👨‍⚕️';
+}
+
+// 获取技师状态文本
+function getTherapistStatusText(status) {
+    const statusMap = {
+        'active': '✅ 在职',
+        'inactive': '❌ 离职',
+        'on_leave': '🏖️ 请假'
+    };
+    return statusMap[status] || '✅ 在职';
+}
+
+// 查看技师预约记录
+function viewTherapistAppointments(therapistId) {
+    showMessage('📅 技师预约记录功能开发中...', 'info');
+    // TODO: 实现技师预约记录功能
+}
+
+// 查看技师工作统计
+function viewTherapistStats(therapistId) {
+    showMessage('📊 技师工作统计功能开发中...', 'info');
+    // TODO: 实现技师工作统计功能
+}
+
+// 显示技师统计
+function showTherapistStats() {
+    document.getElementById('therapistStatsModal').style.display = 'block';
+    loadTherapistStats();
+}
+
+// 关闭技师统计模态框
+function closeTherapistStatsModal() {
+    document.getElementById('therapistStatsModal').style.display = 'none';
+}
+
+// 加载技师统计
+async function loadTherapistStats() {
+    try {
+        const data = await apiRequest(`${API_BASE_URL}/therapists`);
+        if (data.success) {
+            const therapists = data.data?.therapists || [];
+            
+            // 统计各种职位的技师数量
+            const positionStats = {};
+            const storeStats = {};
+            let totalExperience = 0;
+            
+            therapists.forEach(therapist => {
+                // 职位统计
+                const position = therapist.position || '未知';
+                positionStats[position] = (positionStats[position] || 0) + 1;
+                
+                // 门店统计
+                const store = therapist.store_name || '未分配';
+                storeStats[store] = (storeStats[store] || 0) + 1;
+                
+                // 经验统计
+                totalExperience += (therapist.experience_years || therapist.years_of_experience || 0);
+            });
+            
+            const avgExperience = therapists.length > 0 ? Math.round(totalExperience / therapists.length * 10) / 10 : 0;
+            
+            document.getElementById('therapistStatsContent').innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>👨‍⚕️ 技师总数</h3>
+                        <div class="stat-value">${therapists.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>📅 平均经验</h3>
+                        <div class="stat-value">${avgExperience}年</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>✅ 在职技师</h3>
+                        <div class="stat-value">${therapists.filter(t => (t.status || 'active') === 'active').length}</div>
+                    </div>
+                </div>
+                
+                <div class="stats-section">
+                    <h3>👔 职位分布</h3>
+                    <div class="stats-list">
+                        ${Object.entries(positionStats).map(([position, count]) => `
+                            <div class="stats-item">
+                                <span>${getPositionIcon(position)} ${position}</span>
+                                <span>${count}人</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="stats-section">
+                    <h3>🏪 门店分布</h3>
+                    <div class="stats-list">
+                        ${Object.entries(storeStats).slice(0, 5).map(([store, count]) => `
+                            <div class="stats-item">
+                                <span>🏪 ${store}</span>
+                                <span>${count}人</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('加载技师统计失败:', error);
+        document.getElementById('therapistStatsContent').innerHTML = '<p>❌ 加载统计数据失败</p>';
     }
 }
 
